@@ -1,7 +1,7 @@
-import axios from "axios";
+import { api } from "@/api/client";
+import { ENDPOINTS } from "@/api/endpoints";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-const BASE = `${API}/reservations`;
+const BASE = ENDPOINTS.RESERVATIONS.ROOT;
 
 function authHeaders() {
   const token = localStorage.getItem("token");
@@ -28,7 +28,7 @@ export interface ReservationResponse {
 }
 
 export async function createReservation(payload: ReservationPayload) {
-  const { data } = await axios.post<ReservationResponse>(BASE, payload, {
+  const { data } = await api.post<ReservationResponse>(BASE, payload, {
     headers: { "Content-Type": "application/json", ...authHeaders() },
     withCredentials: true,
   });
@@ -36,7 +36,7 @@ export async function createReservation(payload: ReservationPayload) {
 }
 
 export async function listMyReservations() {
-  const { data } = await axios.get<ReservationResponse[]>(`${BASE}/my`, {
+  const { data } = await api.get<ReservationResponse[]>(ENDPOINTS.RESERVATIONS.MY, {
     headers: { ...authHeaders() },
     withCredentials: true,
   });
@@ -44,7 +44,7 @@ export async function listMyReservations() {
 }
 
 export async function cancelReservation(id: number) {
-  await axios.delete(`${BASE}/${id}`, {
+  await api.delete(`${BASE}/${id}`, {
     headers: { ...authHeaders() },
     withCredentials: true,
   });

@@ -1,4 +1,3 @@
-// src/utils/flightColors.ts
 export const statusColors: Record<string, string> = {
   SCHEDULED: "bg-blue-500 text-white",
   BOARDING: "bg-indigo-500 text-white",
@@ -11,13 +10,21 @@ export const statusColors: Record<string, string> = {
 
 export const statusLabel = (status: string): string => {
   switch (status) {
-    case "SCHEDULED": return "Programado";
-    case "BOARDING": return "Embarcando";
-    case "EN-ROUTE": return "En Ruta";
-    case "LANDED": return "Aterrizado";
-    case "DELAYED": return "Retrasado";
-    case "DIVERTED": return "Desviado";
-    case "EMERGENCY": return "Emergencia";
-    default: return status;
+    case "SCHEDULED":
+      return "Programado";
+    case "BOARDING":
+      return "Embarcando";
+    case "EN-ROUTE":
+      return "En Ruta";
+    case "LANDED":
+      return "Aterrizado";
+    case "DELAYED":
+      return "Retrasado";
+    case "DIVERTED":
+      return "Desviado";
+    case "EMERGENCY":
+      return "Emergencia";
+    default:
+      return status;
   }
 };

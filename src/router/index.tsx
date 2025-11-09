@@ -14,7 +14,7 @@ export default function AppRoutes() {
   return (
     <>
       <Navbar />
-      <Suspense fallback={<div className="p-6">Cargando...</div>}>
+      <Suspense fallback={<div className="p-6">Cargando…</div>}>
         <Routes>
           <Route path="/" element={<Navigate to="/flights" replace />} />
           <Route path="/login" element={<LoginPage />} />

@@ -1,7 +1,7 @@
-// src/services/flightStream.ts
-import { Flight } from "./flightService";
-import { normalizeFlight } from "../utils/normalizeFlight";
+import { normalizeFlight } from "@/utils/normalizeFlight";
+import { API_BASE, ENDPOINTS } from "@/api/endpoints";
 
+export type Flight = ReturnType<typeof normalizeFlight>;
 export type OnFlightUpdate = (flight: Flight) => void;
 
 export class FlightStream {
@@ -9,8 +9,8 @@ export class FlightStream {
 
   connect(onUpdate: OnFlightUpdate) {
     if (this.source) return;
-
-    this.source = new EventSource("http://localhost:8080/api/live/stream");
+    const url = `${API_BASE}${ENDPOINTS.LIVE.STREAM}`;
+    this.source = new EventSource(url);
 
     this.source.onmessage = (event) => {
       try {
@@ -20,13 +20,10 @@ export class FlightStream {
         } else {
           onUpdate(normalizeFlight(data));
         }
-      } catch (err) {
-        console.error("Error parsing flight update:", err);
-      }
+      } catch {}
     };
 
     this.source.onerror = () => {
-      console.warn("SSE connection lost. Reconnecting in 5s...");
       this.disconnect();
       setTimeout(() => this.connect(onUpdate), 5000);
     };

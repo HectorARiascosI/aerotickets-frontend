@@ -1,7 +1,9 @@
-import axios from "axios";
-import { normalizeFlight } from "../utils/normalizeFlight";
+import { api } from "@/api/client";
+import { ENDPOINTS } from "@/api/endpoints";
+import { normalizeFlight } from "@/utils/normalizeFlight";
 
-export interface Flight {
+export type Flight = {
+  id?: number;
   airline: string;
   flightNumber?: string;
   origin: string;
@@ -21,10 +23,8 @@ export interface Flight {
   cargoKg?: number;
   boardingStartAt?: string;
   boardingEndAt?: string;
-  price?: number;
-}
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+  price?: number | null;
+};
 
 function normalize(text: string) {
   return (text || "")
@@ -33,7 +33,6 @@ function normalize(text: string) {
     .trim();
 }
 
-// ✅ Envío robusto y compatible con el backend
 export async function searchFlights(origin: string, destination: string, date: string) {
   const payload = {
     origin: origin.trim(),
@@ -42,20 +41,12 @@ export async function searchFlights(origin: string, destination: string, date: s
   };
 
   try {
-    const { data } = await axios.post(`${API}/live/flights/search`, payload, {
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const flights: Flight[] = Array.isArray(data)
-      ? data.map((f) => normalizeFlight(f))
-      : [];
-
+    const { data } = await api.post(ENDPOINTS.LIVE.FLIGHTS, payload);
+    const flights: Flight[] = Array.isArray(data) ? data.map((f) => normalizeFlight(f)) : [];
     return flights.sort(
-      (a, b) =>
-        new Date(a.departureAt).getTime() - new Date(b.departureAt).getTime()
+      (a, b) => new Date(a.departureAt).getTime() - new Date(b.departureAt).getTime()
     );
-  } catch (err) {
-    console.error("Error fetching flights:", err);
+  } catch {
     return [];
   }
 }
@@ -64,9 +55,7 @@ export async function autocompleteAirports(query: string) {
   const q = normalize(query);
   if (!q || q.length < 2) return [];
   try {
-    const { data } = await axios.get(`${API}/live/airports/search`, {
-      params: { query: q },
-    });
+    const { data } = await api.get(ENDPOINTS.LIVE.AIRPORTS, { params: { query: q } });
     return Array.isArray(data)
       ? data.map((a: any) => ({
           iata: a.iata,
@@ -74,8 +63,7 @@ export async function autocompleteAirports(query: string) {
           label: `${a.city} (${a.iata}) - ${a.airport}`,
         }))
       : [];
-  } catch (e) {
-    console.error("Error loading airports:", e);
+  } catch {
     return [];
   }
 }
