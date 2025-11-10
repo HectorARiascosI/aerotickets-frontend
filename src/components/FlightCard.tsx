@@ -1,3 +1,4 @@
+// src/components/FlightCard.tsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Flight, upsertFlightForReservation } from "@/services/flightService";
@@ -38,16 +39,16 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
         return;
       }
 
-      // 1) Asegurar que el vuelo exista en BD y obtener su id
+      // 1) Garantiza que el vuelo exista en BD
       let flightId = (flight as any).id as number | undefined;
       if (!flightId) {
         flightId = await upsertFlightForReservation(flight);
       }
 
-      // 2) Crear la reserva
+      // 2) Crea la reserva
       const resp = await createReservation({
         flightId,
-        seatNumber: seatNum
+        seatNumber: seatNum,
       });
 
       const seatShown = resp?.seatNumber ?? seatNum ?? "automático";
@@ -89,11 +90,7 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
           </div>
           <div className="flex flex-col items-center justify-center">
             <p className="text-lg text-gray-400 mb-1">✈️</p>
-            <p
-              className={`text-xs ${
-                flight.delayMinutes && flight.delayMinutes > 0 ? "text-yellow-600" : "text-gray-500"
-              }`}
-            >
+            <p className={`text-xs ${flight.delayMinutes && flight.delayMinutes > 0 ? "text-yellow-600" : "text-gray-500"}`}>
               {flight.delayMinutes && flight.delayMinutes > 0 ? `Retraso ${flight.delayMinutes} min` : "A tiempo"}
             </p>
           </div>
@@ -111,18 +108,13 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
         </div>
 
         <div className="flex justify-between items-center mt-2">
-          {flight.price ? (
-            <p className="text-base font-semibold text-emerald-700">
-              ${flight.price.toLocaleString("es-CO")}
-            </p>
+          {typeof flight.price === "number" ? (
+            <p className="text-base font-semibold text-emerald-700">${flight.price.toLocaleString("es-CO")}</p>
           ) : (
             <span className="text-gray-400 text-sm">Sin precio</span>
           )}
 
-          <button
-            onClick={() => setOpen(true)}
-            className="px-5 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"
-          >
+          <button onClick={() => setOpen(true)} className="px-5 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition">
             Reservar
           </button>
         </div>
@@ -154,11 +146,7 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
             <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-md border text-sm hover:bg-gray-50 transition">
               Cancelar
             </button>
-            <button
-              onClick={confirmReservation}
-              disabled={loading}
-              className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60 transition"
-            >
+            <button onClick={confirmReservation} disabled={loading} className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60 transition">
               {loading ? "Procesando..." : "Confirmar"}
             </button>
           </div>
@@ -167,4 +155,5 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
     </>
   );
 };
+
 export default FlightCard;
