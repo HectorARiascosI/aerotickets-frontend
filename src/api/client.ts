@@ -4,7 +4,7 @@ import { API_BASE } from "./endpoints";
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
-  headers: { "Content-Type": "application/json", Accept: "application/json" }
+  headers: { "Content-Type": "application/json", Accept: "application/json" },
 });
 
 api.interceptors.request.use((config) => {
