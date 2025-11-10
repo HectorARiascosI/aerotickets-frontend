@@ -1,18 +1,39 @@
 import type { Flight } from "@/services/flightService";
+import { getDeterministicPrice } from "@/utils/pricing";
 
 export function normalizeFlight(raw: any): Flight {
   if (!raw) {
     return {
       airline: "—",
+      flightNumber: "—",
       origin: "—",
       destination: "—",
       departureAt: "",
       arrivalAt: "",
-      price: null,
+      status: "SCHEDULED",
+      aircraftType: "—",
+      terminal: "—",
+      gate: "—",
+      baggageBelt: "—",
+      delayMinutes: 0,
+      diverted: false,
+      emergency: false,
+      totalSeats: 0,
+      occupiedSeats: 0,
+      cargoKg: 0,
+      boardingStartAt: "",
+      boardingEndAt: "",
+      price: getDeterministicPrice({
+        airline: "—",
+        flightNumber: "—",
+        origin: "—",
+        destination: "—",
+        departureAt: "",
+      } as any),
     } as Flight;
   }
 
-  return {
+  const flightObj: any = {
     airline: raw.airline ?? "Desconocida",
     flightNumber: raw.flightNumber ?? raw.code ?? "—",
     origin: raw.origin ?? raw.originIata ?? raw.originCity ?? "—",
@@ -32,6 +53,12 @@ export function normalizeFlight(raw: any): Flight {
     cargoKg: raw.cargoKg ?? 0,
     boardingStartAt: raw.boardingStartAt ?? "",
     boardingEndAt: raw.boardingEndAt ?? "",
-    price: raw.price ?? null,
+    price: typeof raw.price === "number" ? raw.price : null,
   };
+
+  if (typeof flightObj.price !== "number" || flightObj.price <= 0) {
+    flightObj.price = getDeterministicPrice(flightObj);
+  }
+
+  return flightObj as Flight;
 }

@@ -9,7 +9,7 @@ function hash(s: string) {
 export function getDeterministicPrice(f: Flight): number {
   const key = `${f.airline}|${f.flightNumber}|${f.origin}|${f.destination}|${f.departureAt?.slice(0, 16)}`;
   const h = hash(key);
-  const base = 90000 + (h % 250000);
-  const demand = (h % 5) * 10000;
+  const base = 90000 + (h % 250000); // 90k – 340k
+  const demand = (h % 5) * 10000;     // +0..40k
   return base + demand;
 }

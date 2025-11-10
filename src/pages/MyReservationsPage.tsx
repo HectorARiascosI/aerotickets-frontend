@@ -95,27 +95,26 @@ export default function MyReservationsPage() {
               </TD>
 
               <TD>
-                <div className="text-sm text-gray-700">{formatDateTime(r.departureAt)}</div>
+                <div className="text-sm text-gray-700">{formatDateTime(r.departureAt || "")}</div>
                 <div className="text-xs text-gray-500">{formatDateTime(getArrival(r))}</div>
               </TD>
 
               <TD className="text-right font-medium text-gray-800">
-                {formatCurrency(r.price ?? 0)}
+                {formatCurrency((r.price as number) ?? 0)}
               </TD>
 
               <TD className="text-center">
                 <Badge
                   color={r.status === "ACTIVE" ? "green" : "red"}
-                  className="flex items-center justify-center gap-1"
                 >
                   {r.status === "ACTIVE" ? (
                     <>
-                      <FaCheckCircle className="text-green-500" />
+                      <FaCheckCircle className="inline mr-1" />
                       <span>Activa</span>
                     </>
                   ) : (
                     <>
-                      <FaTimesCircle className="text-red-500" />
+                      <FaTimesCircle className="inline mr-1" />
                       <span>Cancelada</span>
                     </>
                   )}
