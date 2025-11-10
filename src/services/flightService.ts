@@ -33,9 +33,6 @@ function toIso(x?: string) {
   return isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
-/**
- * SIEMPRE buscar en /live/... (no /api/flights/search).
- */
 export async function searchFlights(origin: string, destination: string, date: string) {
   const payload = {
     origin: origin.trim(),
@@ -72,10 +69,6 @@ export async function autocompleteAirports(query: string) {
   }
 }
 
-/**
- * Intenta crear el vuelo y, si ya existe, lo busca y devuelve su id.
- * Importante: el backend usa 'arriveAt' (no 'arrivalAt').
- */
 export async function upsertFlightForReservation(f: Flight): Promise<number> {
   const payload = {
     airline: f.airline ?? null,
@@ -83,30 +76,26 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
     origin: f.origin ?? null,
     destination: f.destination ?? null,
     departureAt: toIso(f.departureAt),
-    arriveAt: toIso(f.arrivalAt), // <- nombre esperado por el backend
+    arriveAt: toIso(f.arrivalAt),
     status: f.status ?? "SCHEDULED",
     aircraftType: f.aircraftType ?? null,
     terminal: f.terminal ?? null,
     gate: f.gate ?? null,
     baggageBelt: f.baggageBelt ?? null,
-    price: typeof f.price === "number" ? f.price : 0, // BigDecimal no-null en varios DTO
+    price: typeof f.price === "number" ? f.price : 0,
   };
 
-  // 1) Intentar crear
   try {
     const { data } = await api.post(ENDPOINTS.FLIGHTS.ROOT, payload, {
       headers: { "Content-Type": "application/json" },
       withCredentials: true,
     });
     const id = Number(data?.id);
-    if (!id) throw new Error("Flight creation failed (no id)");
+    if (!id) throw new Error("Flight creation failed");
     return id;
   } catch (err: any) {
-    // 2) Si falla (duplicado/validación), intentar reutilizar el existente
     try {
-      const { data } = await api.get(ENDPOINTS.FLIGHTS.ROOT, {
-        withCredentials: true,
-      });
+      const { data } = await api.get(ENDPOINTS.FLIGHTS.ROOT, { withCredentials: true });
       const all: any[] = Array.isArray(data) ? data : [];
 
       const dep = toIso(f.departureAt);
@@ -125,10 +114,8 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
 
       const id = match ? Number(match.id) : NaN;
       if (!isNaN(id) && id > 0) return id;
-
-      // Si no lo encontramos, relanzamos el error original
       throw err;
-    } catch (e) {
+    } catch {
       throw err;
     }
   }

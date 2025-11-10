@@ -31,20 +31,17 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
   async function confirmReservation() {
     try {
       setLoading(true);
-
       const seatNum = seat ? Number(seat.trim()) : undefined;
       if (seatNum !== undefined && (Number.isNaN(seatNum) || seatNum <= 0)) {
         alert("Número de asiento inválido.");
         return;
       }
 
-      // 1) Garantiza que el vuelo exista (idempotente)
       let flightId = (flight as any).id as number | undefined;
       if (!flightId) {
         flightId = await upsertFlightForReservation(flight);
       }
 
-      // 2) Crear reserva
       const resp = await createReservation({
         flightId,
         seatNumber: seatNum,
@@ -89,7 +86,7 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
           </div>
           <div className="flex flex-col items-center justify-center">
             <p className="text-lg text-gray-400 mb-1">✈️</p>
-            <p className={`text-xs ${flight.delayMinutes && flight.delayMinutes > 0 ? "text-yellow-600" : "text-gray-500"}`}>
+            <p className={`text-xs ${flight.delayMinutes && flight.delayMinutes > 0 ? "text-yellow-600" : "text-green-600"}`}>
               {flight.delayMinutes && flight.delayMinutes > 0 ? `Retraso ${flight.delayMinutes} min` : "A tiempo"}
             </p>
           </div>
@@ -147,10 +144,17 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
           </label>
 
           <div className="flex justify-end gap-3 pt-3 border-t">
-            <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-md border text-sm hover:bg-gray-50 transition">
+            <button
+              onClick={() => setOpen(false)}
+              className="px-4 py-2 rounded-md border text-sm hover:bg-gray-50 transition"
+            >
               Cancelar
             </button>
-            <button onClick={confirmReservation} disabled={loading} className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60 transition">
+            <button
+              onClick={confirmReservation}
+              disabled={loading}
+              className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60 transition"
+            >
               {loading ? "Procesando..." : "Confirmar"}
             </button>
           </div>
