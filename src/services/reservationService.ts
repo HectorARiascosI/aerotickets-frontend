@@ -11,24 +11,33 @@ function authHeaders() {
 export interface ReservationPayload {
   flightId: number;
   seatNumber?: number;
+  seats?: number;
 }
 
-export interface ReservationResponse {
+export type ReservationResponse = {
   id: number;
+  status?: "ACTIVE" | "CANCELLED" | string;
+  createdAt?: string;
+  flightId?: number;
+  airline?: string;
+  origin?: string;
+  destination?: string;
+  departureAt?: string;
+  arrivalAt?: string; // preferido
+  arriveAt?: string;  // compat
+  price?: number | null;
   seatNumber?: number;
-  status: "ACTIVE" | "CANCELLED";
-  createdAt: string;
-  flightId: number;
-  airline: string;
-  origin: string;
-  destination: string;
-  departureAt: string;
-  arriveAt: string;
-  price: number;
-}
+};
 
 export async function createReservation(payload: ReservationPayload) {
-  const { data } = await api.post<ReservationResponse>(BASE, payload, {
+  // compat: si no mandan seatNumber, manda seats=1
+  const body = {
+    flightId: payload.flightId,
+    seatNumber: payload.seatNumber ?? undefined,
+    seats: payload.seats ?? (payload.seatNumber ? 1 : 1),
+  };
+
+  const { data } = await api.post<ReservationResponse>(BASE, body, {
     headers: { "Content-Type": "application/json", ...authHeaders() },
     withCredentials: true,
   });
@@ -40,7 +49,7 @@ export async function listMyReservations() {
     headers: { ...authHeaders() },
     withCredentials: true,
   });
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function cancelReservation(id: number) {

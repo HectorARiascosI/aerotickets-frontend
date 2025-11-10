@@ -1,54 +1,64 @@
-import { useEffect, useState } from 'react'
-import { listMyReservations, cancelReservation } from '@/services/reservationService'
-import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
-import Loader from '@/components/ui/Loader'
-import EmptyState from '@/components/ui/EmptyState'
-import Button from '@/components/ui/Button'
-import Badge from '@/components/ui/Badge'
-import { formatCurrency, formatDateTime } from '@/utils/format'
-import { ReservationDTO } from '@/types'
-import toast from 'react-hot-toast'
-import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
+import { useEffect, useMemo, useState } from "react";
+import { listMyReservations, cancelReservation } from "@/services/reservationService";
+import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
+import Loader from "@/components/ui/Loader";
+import EmptyState from "@/components/ui/EmptyState";
+import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
+import { formatCurrency, formatDateTime } from "@/utils/format";
+import toast from "react-hot-toast";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+
+type Row = Awaited<ReturnType<typeof listMyReservations>> extends (infer U)[] ? U : never;
 
 export default function MyReservationsPage() {
-  const [loading, setLoading] = useState(true)
-  const [cancelingId, setCancelingId] = useState<number | null>(null)
-  const [reservations, setReservations] = useState<ReservationDTO[]>([])
+  const [loading, setLoading] = useState(true);
+  const [cancelingId, setCancelingId] = useState<number | null>(null);
+  const [rows, setRows] = useState<Row[]>([]);
+
+  const ordered = useMemo(
+    () =>
+      [...rows].sort(
+        (a, b) =>
+          new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime()
+      ),
+    [rows]
+  );
 
   const load = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const data = await listMyReservations()
-      // ✅ Ordena por fecha de creación más reciente
-      const ordered = [...data].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-      setReservations(ordered)
+      const data = await listMyReservations();
+      setRows(data);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'No fue posible cargar reservas')
+      toast.error(e?.response?.data?.message ?? "No fue posible cargar reservas");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load();
+  }, []);
 
   const onCancel = async (id: number) => {
-    if (!window.confirm('¿Seguro que deseas cancelar esta reserva?')) return
-    setCancelingId(id)
+    if (!window.confirm("¿Seguro que deseas cancelar esta reserva?")) return;
+    setCancelingId(id);
     try {
-      await cancelReservation(id)
-      toast.success('Reserva cancelada correctamente')
-      await load()
+      await cancelReservation(id);
+      toast.success("Reserva cancelada correctamente");
+      await load();
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'No fue posible cancelar la reserva')
+      toast.error(e?.response?.data?.message ?? "No fue posible cancelar la reserva");
     } finally {
-      setCancelingId(null)
+      setCancelingId(null);
     }
-  }
+  };
 
-  if (loading) return <Loader label="Cargando tus reservas..." />
-  if (reservations.length === 0) return <EmptyState title="Aún no tienes reservas" />
+  if (loading) return <Loader label="Cargando tus reservas..." />;
+  if (ordered.length === 0) return <EmptyState title="Aún no tienes reservas" />;
+
+  const getArrival = (r: Row) => r.arrivalAt || r.arriveAt || "";
 
   return (
     <div className="max-w-6xl mx-auto py-6 px-4">
@@ -67,11 +77,11 @@ export default function MyReservationsPage() {
           </TR>
         </THead>
         <TBody>
-          {reservations.map(r => (
+          {ordered.map((r) => (
             <TR
               key={r.id}
               className={`transition-colors hover:bg-gray-50 ${
-                r.status === 'CANCELLED' ? 'opacity-70' : ''
+                r.status === "CANCELLED" ? "opacity-70" : ""
               }`}
             >
               <TD>
@@ -85,24 +95,20 @@ export default function MyReservationsPage() {
               </TD>
 
               <TD>
-                <div className="text-sm text-gray-700">
-                  {formatDateTime(r.departureAt)}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {formatDateTime(r.arriveAt)}
-                </div>
+                <div className="text-sm text-gray-700">{formatDateTime(r.departureAt)}</div>
+                <div className="text-xs text-gray-500">{formatDateTime(getArrival(r))}</div>
               </TD>
 
               <TD className="text-right font-medium text-gray-800">
-                {formatCurrency(r.price)}
+                {formatCurrency(r.price ?? 0)}
               </TD>
 
               <TD className="text-center">
                 <Badge
-                  color={r.status === 'ACTIVE' ? 'green' : 'red'}
+                  color={r.status === "ACTIVE" ? "green" : "red"}
                   className="flex items-center justify-center gap-1"
                 >
-                  {r.status === 'ACTIVE' ? (
+                  {r.status === "ACTIVE" ? (
                     <>
                       <FaCheckCircle className="text-green-500" />
                       <span>Activa</span>
@@ -117,13 +123,13 @@ export default function MyReservationsPage() {
               </TD>
 
               <TD className="text-right">
-                {r.status === 'ACTIVE' && (
+                {r.status === "ACTIVE" && (
                   <Button
                     variant="danger"
                     disabled={cancelingId === r.id}
                     onClick={() => onCancel(r.id)}
                   >
-                    {cancelingId === r.id ? 'Cancelando...' : 'Cancelar'}
+                    {cancelingId === r.id ? "Cancelando..." : "Cancelar"}
                   </Button>
                 )}
               </TD>
@@ -132,5 +138,5 @@ export default function MyReservationsPage() {
         </TBody>
       </Table>
     </div>
-  )
+  );
 }
