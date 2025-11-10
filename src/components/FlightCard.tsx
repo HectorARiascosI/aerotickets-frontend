@@ -31,12 +31,14 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
   async function confirmReservation() {
     try {
       setLoading(true);
+
       const seatNum = seat ? Number(seat.trim()) : undefined;
       if (seatNum !== undefined && (Number.isNaN(seatNum) || seatNum <= 0)) {
         alert("Número de asiento inválido.");
         return;
       }
 
+      // Garantiza existencia del vuelo (idempotente)
       let flightId = (flight as any).id as number | undefined;
       if (!flightId) {
         flightId = await upsertFlightForReservation(flight);
@@ -66,6 +68,7 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
+        {/* CABECERA */}
         <div className="flex justify-between items-start mb-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">
@@ -78,6 +81,7 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
           </span>
         </div>
 
+        {/* HORARIOS */}
         <div className="flex justify-between text-sm border-y py-3 mb-3">
           <div className="text-left">
             <p className="text-gray-500">Origen</p>
@@ -97,12 +101,14 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
           </div>
         </div>
 
+        {/* INFO TÉCNICA */}
         <div className="grid grid-cols-3 text-xs text-gray-500 gap-1 mb-2">
           <p>Terminal: {terminal}</p>
           <p>Puerta: {gate}</p>
           <p>Cinta: {belt}</p>
         </div>
 
+        {/* PIE */}
         <div className="flex justify-between items-center mt-2">
           {typeof flight.price === "number" ? (
             <p className="text-base font-semibold text-emerald-700">
@@ -121,6 +127,7 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
         </div>
       </motion.div>
 
+      {/* MODAL */}
       <Modal open={open} onClose={() => setOpen(false)} title={`Reserva en ${airline} ${flightNumber}`}>
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-md p-3 text-sm text-gray-700">
