@@ -30,11 +30,10 @@ export type ReservationResponse = {
 };
 
 export async function createReservation(payload: ReservationPayload) {
-  // compat: si no mandan seatNumber, manda seats=1
   const body = {
     flightId: payload.flightId,
     seatNumber: payload.seatNumber ?? undefined,
-    seats: payload.seats ?? (payload.seatNumber ? 1 : 1),
+    seats: payload.seats ?? 1, // asegura seats >= 1
   };
 
   const { data } = await api.post<ReservationResponse>(BASE, body, {
