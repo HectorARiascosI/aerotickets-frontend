@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Flight } from "../services/flightService";
+import { Flight, getOrCreateFlightId } from "../services/flightService";
 import { createReservation } from "../services/reservationService";
 import { statusColors, statusLabel } from "../utils/flightColors";
 import Modal from "../components/ui/Modal";
@@ -31,30 +31,29 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
   async function confirmReservation() {
     try {
       setLoading(true);
-
       const seatNum = seat ? Number(seat.trim()) : undefined;
       if (seatNum !== undefined && (Number.isNaN(seatNum) || seatNum <= 0)) {
         alert("Número de asiento inválido.");
         return;
       }
 
-      const anyId = (flight as any).id as number | undefined;
-      if (!anyId) {
-        alert("Este vuelo es solo simulado, no puede reservarse aún.");
-        return;
+      let flightId = (flight as any).id as number | undefined;
+      if (!flightId) {
+        flightId = await getOrCreateFlightId(flight);
+        if (!flightId) {
+          alert("No fue posible registrar el vuelo para la reserva.");
+          return;
+        }
       }
 
-      // compat: enviamos seatNumber y también seats=1 si seatNumber no viene
       const resp = await createReservation({
-        flightId: anyId,
+        flightId,
         seatNumber: seatNum,
-        seats: seatNum ? 1 : 1,
+        seats: 1,
       });
 
-      const seatShown = resp?.seatNumber ?? seatNum ?? "automático";
-      alert(
-        `Reserva creada exitosamente:\n${airline} ${flightNumber}\nAsiento: ${seatShown}`
-      );
+      const seatShown = (resp as any)?.seatNumber ?? seatNum ?? "automático";
+      alert(`Reserva creada exitosamente:\n${airline} ${flightNumber}\nAsiento: ${seatShown}`);
       setOpen(false);
       setSeat("");
     } catch (e: any) {
