@@ -1,4 +1,3 @@
-// src/components/FlightCard.tsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Flight, upsertFlightForReservation } from "@/services/flightService";
@@ -39,13 +38,13 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
         return;
       }
 
-      // 1) Garantiza que el vuelo exista en BD
+      // 1) Garantiza que el vuelo exista (idempotente)
       let flightId = (flight as any).id as number | undefined;
       if (!flightId) {
         flightId = await upsertFlightForReservation(flight);
       }
 
-      // 2) Crea la reserva
+      // 2) Crear reserva
       const resp = await createReservation({
         flightId,
         seatNumber: seatNum,
@@ -109,12 +108,17 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
 
         <div className="flex justify-between items-center mt-2">
           {typeof flight.price === "number" ? (
-            <p className="text-base font-semibold text-emerald-700">${flight.price.toLocaleString("es-CO")}</p>
+            <p className="text-base font-semibold text-emerald-700">
+              ${flight.price.toLocaleString("es-CO")}
+            </p>
           ) : (
             <span className="text-gray-400 text-sm">Sin precio</span>
           )}
 
-          <button onClick={() => setOpen(true)} className="px-5 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition">
+          <button
+            onClick={() => setOpen(true)}
+            className="px-5 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"
+          >
             Reservar
           </button>
         </div>

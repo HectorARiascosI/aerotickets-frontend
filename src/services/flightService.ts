@@ -1,4 +1,3 @@
-// src/services/flightService.ts
 import api from "@/api/client";
 import { ENDPOINTS } from "@/api/endpoints";
 import { normalizeFlight } from "@/utils/normalizeFlight";
@@ -35,7 +34,7 @@ function toIso(x?: string) {
 }
 
 /**
- * Búsqueda SIEMPRE por /live/flights/search (no /api/flights/search).
+ * SIEMPRE buscar en /live/... (no /api/flights/search).
  */
 export async function searchFlights(origin: string, destination: string, date: string) {
   const payload = {
@@ -55,9 +54,6 @@ export async function searchFlights(origin: string, destination: string, date: s
   }
 }
 
-/**
- * Autocomplete por /live/airports/search.
- */
 export async function autocompleteAirports(query: string) {
   const q = normalizeText(query);
   if (!q || q.length < 2) return [];
@@ -77,8 +73,8 @@ export async function autocompleteAirports(query: string) {
 }
 
 /**
- * Crea/actualiza el vuelo en la BD y devuelve su id.
- * Nota: el backend espera 'arriveAt' (no 'arrivalAt').
+ * Intenta crear el vuelo y, si ya existe, lo busca y devuelve su id.
+ * Importante: el backend usa 'arriveAt' (no 'arrivalAt').
  */
 export async function upsertFlightForReservation(f: Flight): Promise<number> {
   const payload = {
@@ -87,21 +83,53 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
     origin: f.origin ?? null,
     destination: f.destination ?? null,
     departureAt: toIso(f.departureAt),
-    arriveAt: toIso(f.arrivalAt), // <- clave: coincide con tu backend
+    arriveAt: toIso(f.arrivalAt), // <- nombre esperado por el backend
     status: f.status ?? "SCHEDULED",
     aircraftType: f.aircraftType ?? null,
     terminal: f.terminal ?? null,
     gate: f.gate ?? null,
     baggageBelt: f.baggageBelt ?? null,
-    price: typeof f.price === "number" ? f.price : 0,
+    price: typeof f.price === "number" ? f.price : 0, // BigDecimal no-null en varios DTO
   };
 
-  const { data } = await api.post(ENDPOINTS.FLIGHTS.ROOT, payload, {
-    headers: { "Content-Type": "application/json" },
-    withCredentials: true,
-  });
+  // 1) Intentar crear
+  try {
+    const { data } = await api.post(ENDPOINTS.FLIGHTS.ROOT, payload, {
+      headers: { "Content-Type": "application/json" },
+      withCredentials: true,
+    });
+    const id = Number(data?.id);
+    if (!id) throw new Error("Flight creation failed (no id)");
+    return id;
+  } catch (err: any) {
+    // 2) Si falla (duplicado/validación), intentar reutilizar el existente
+    try {
+      const { data } = await api.get(ENDPOINTS.FLIGHTS.ROOT, {
+        withCredentials: true,
+      });
+      const all: any[] = Array.isArray(data) ? data : [];
 
-  const id = Number(data?.id);
-  if (!id) throw new Error("Flight creation failed");
-  return id;
+      const dep = toIso(f.departureAt);
+      const num = (f.flightNumber || "").toUpperCase().trim();
+
+      const match = all.find((x) => {
+        const sameNum =
+          (x.flightNumber || "").toUpperCase().trim() === num && num.length > 0;
+        const sameDep =
+          !!dep && !!x.departureAt && new Date(x.departureAt).toISOString() === dep;
+        const sameRoute =
+          (x.origin || "") === (f.origin || "") &&
+          (x.destination || "") === (f.destination || "");
+        return sameNum && sameDep && sameRoute;
+      });
+
+      const id = match ? Number(match.id) : NaN;
+      if (!isNaN(id) && id > 0) return id;
+
+      // Si no lo encontramos, relanzamos el error original
+      throw err;
+    } catch (e) {
+      throw err;
+    }
+  }
 }
