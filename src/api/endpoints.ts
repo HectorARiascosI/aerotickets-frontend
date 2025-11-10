@@ -1,6 +1,8 @@
+// Base limpia: sin slash final y sin /api
 const RAW_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
 export const API_BASE = RAW_BASE.replace(/\/+$/, "");
 
+// Todas las rutas con /api al inicio
 export const ENDPOINTS = {
   AUTH: {
     LOGIN: "/api/auth/login",
@@ -29,7 +31,7 @@ export const ENDPOINTS = {
     MY: "/api/reservations/my",
   },
   MISC: {
-    HEALTH: "/health",
+    HEALTH: "/actuator/health", // si usas Spring Actuator; si no, deja "/health"
     HOLA: "/hola",
   },
 } as const;

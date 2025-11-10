@@ -1,8 +1,8 @@
 import axios from "axios";
 import { API_BASE } from "./endpoints";
 
-export const api = axios.create({
-  baseURL: API_BASE,
+const api = axios.create({
+  baseURL: API_BASE,           // ← base sin /api
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
