@@ -2,10 +2,7 @@ import api from "@/api/client";
 import { ENDPOINTS } from "@/api/endpoints";
 import { normalizeFlight } from "@/utils/normalizeFlight";
 
-type LiveEndpoints = {
-  AIRPORTS: string;
-  FLIGHTS: string;
-};
+type LiveEndpoints = { AIRPORTS: string; FLIGHTS: string };
 
 function withApiPrefix(path: string) {
   if (!path.startsWith("/")) return "/api/" + path;
@@ -21,10 +18,7 @@ function live(): LiveEndpoints {
 export type Flight = ReturnType<typeof normalizeFlight>;
 
 function normalizeText(text: string) {
-  return (text || "")
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .trim();
+  return (text || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 }
 
 function toIso(x?: string) {
@@ -33,15 +27,15 @@ function toIso(x?: string) {
   return isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
+/** Buscar SIEMPRE en /live/... */
 export async function searchFlights(origin: string, destination: string, date: string) {
   const payload = {
     origin: origin.trim(),
     destination: destination.trim(),
     date: date || new Date().toISOString().split("T")[0],
   };
-  const url = live().FLIGHTS;
   try {
-    const { data } = await api.post(url, payload);
+    const { data } = await api.post(live().FLIGHTS, payload);
     const list = Array.isArray(data) ? data.map((f: any) => normalizeFlight(f)) : [];
     return list.sort(
       (a, b) => new Date(a.departureAt).getTime() - new Date(b.departureAt).getTime()
@@ -54,9 +48,8 @@ export async function searchFlights(origin: string, destination: string, date: s
 export async function autocompleteAirports(query: string) {
   const q = normalizeText(query);
   if (!q || q.length < 2) return [];
-  const url = live().AIRPORTS;
   try {
-    const { data } = await api.get(url, { params: { query: q } });
+    const { data } = await api.get(live().AIRPORTS, { params: { query: q } });
     return Array.isArray(data)
       ? data.map((a: any) => ({
           iata: a.iata,
@@ -69,6 +62,7 @@ export async function autocompleteAirports(query: string) {
   }
 }
 
+/** Crear el vuelo (idempotente) para poder reservarlo. */
 export async function upsertFlightForReservation(f: Flight): Promise<number> {
   const payload = {
     airline: f.airline ?? null,
@@ -76,7 +70,7 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
     origin: f.origin ?? null,
     destination: f.destination ?? null,
     departureAt: toIso(f.departureAt),
-    arriveAt: toIso(f.arrivalAt),
+    arriveAt: toIso(f.arrivalAt),        // nombre esperado por el backend
     status: f.status ?? "SCHEDULED",
     aircraftType: f.aircraftType ?? null,
     terminal: f.terminal ?? null,
@@ -94,10 +88,10 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
     if (!id) throw new Error("Flight creation failed");
     return id;
   } catch (err: any) {
+    // Si crear falla (duplicado/validación), intenta reutilizar uno existente
     try {
       const { data } = await api.get(ENDPOINTS.FLIGHTS.ROOT, { withCredentials: true });
       const all: any[] = Array.isArray(data) ? data : [];
-
       const dep = toIso(f.departureAt);
       const num = (f.flightNumber || "").toUpperCase().trim();
 
