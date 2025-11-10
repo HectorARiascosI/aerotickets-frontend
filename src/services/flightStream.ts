@@ -4,14 +4,20 @@ import { API_BASE, ENDPOINTS } from "@/api/endpoints";
 export type Flight = ReturnType<typeof normalizeFlight>;
 export type OnFlightUpdate = (flight: Flight) => void;
 
+function withApiPrefix(path: string) {
+  if (!path.startsWith("/")) return "/api/" + path;
+  return path.startsWith("/api/") ? path : "/api" + path;
+}
+
 export class FlightStream {
   private source?: EventSource;
   private reconnectTimer?: number;
 
   connect(onUpdate: OnFlightUpdate) {
     if (this.source) return;
-
-    const url = `${API_BASE}${ENDPOINTS.LIVE.STREAM}`;
+    const raw = (ENDPOINTS as any)?.LIVE?.STREAM ?? "/live/stream";
+    const path = withApiPrefix(raw);
+    const url = `${API_BASE}${path}`;
     this.source = new EventSource(url);
 
     this.source.onmessage = (event) => {
