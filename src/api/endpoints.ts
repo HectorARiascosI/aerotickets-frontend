@@ -1,9 +1,10 @@
-export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const RAW_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+export const API_BASE = RAW_BASE.replace(/\/+$/, "");
 
 export const ENDPOINTS = {
   AUTH: {
-    LOGIN: "/auth/login",
-    REGISTER: "/auth/register",
+    LOGIN: "/api/auth/login",
+    REGISTER: "/api/auth/register",
     FORGOT: "/api/auth/forgot-password",
     RESET: "/api/auth/reset-password",
   },
@@ -15,8 +16,8 @@ export const ENDPOINTS = {
     AIRPORTS_CO: "/api/catalog/airports/co",
   },
   LIVE: {
-    AIRPORTS: "/live/airports/search",
-    FLIGHTS: "/live/flights/search",
+    AIRPORTS: "/api/live/airports/search",
+    FLIGHTS: "/api/live/flights/search",
     STREAM: "/api/live/stream",
   },
   FLIGHTS: {
@@ -24,8 +25,8 @@ export const ENDPOINTS = {
     SEARCH: "/api/flights/search",
   },
   RESERVATIONS: {
-    ROOT: "/reservations",
-    MY: "/reservations/my",
+    ROOT: "/api/reservations",
+    MY: "/api/reservations/my",
   },
   MISC: {
     HEALTH: "/health",
