@@ -17,17 +17,22 @@ function live(): LiveEndpoints {
 
 export type Flight = ReturnType<typeof normalizeFlight>;
 
+/** Normaliza texto para autocomplete */
 function normalizeText(text: string) {
   return (text || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 }
 
-function toIso(x?: string) {
+/** Formato que acepta tu backend: yyyy-MM-ddTHH:mm:ss (sin Z) */
+function toIsoLocal(x?: string) {
   if (!x) return undefined;
   const d = new Date(x);
-  return isNaN(d.getTime()) ? undefined : d.toISOString();
+  if (isNaN(d.getTime())) return undefined;
+  const tzo = d.getTimezoneOffset() * 60000;
+  const local = new Date(d.getTime() - tzo);
+  return local.toISOString().slice(0, 19); // sin 'Z'
 }
 
-/** Buscar SIEMPRE en /live/... */
+/** Buscar SIEMPRE en /live/... (mock remota) */
 export async function searchFlights(origin: string, destination: string, date: string) {
   const payload = {
     origin: origin.trim(),
@@ -62,24 +67,24 @@ export async function autocompleteAirports(query: string) {
   }
 }
 
-/** Crear el vuelo (idempotente) para poder reservarlo. */
+/**
+ * Upsert de vuelo compatible con el backend actual (sin flightNumber).
+ * - Enviamos SOLO los campos que tu backend entiende.
+ * - Fechas en ISO local (sin Z).
+ * - Fallback: si crear falla, busca por (origin, destination, departureAt).
+ */
 export async function upsertFlightForReservation(f: Flight): Promise<number> {
   const payload = {
-    airline: f.airline ?? null,
-    flightNumber: f.flightNumber ?? null,
-    origin: f.origin ?? null,
-    destination: f.destination ?? null,
-    departureAt: toIso(f.departureAt),
-    arriveAt: toIso(f.arrivalAt),        // nombre esperado por el backend
-    status: f.status ?? "SCHEDULED",
-    aircraftType: f.aircraftType ?? null,
-    terminal: f.terminal ?? null,
-    gate: f.gate ?? null,
-    baggageBelt: f.baggageBelt ?? null,
+    airline: f.airline ?? "Desconocida",
+    origin: f.origin ?? "",
+    destination: f.destination ?? "",
+    departureAt: toIsoLocal(f.departureAt),
+    arriveAt: toIsoLocal(f.arrivalAt),
+    totalSeats: typeof f.totalSeats === "number" ? f.totalSeats : 0,
     price: typeof f.price === "number" ? f.price : 0,
   };
 
-  try {
+  const create = async () => {
     const { data } = await api.post(ENDPOINTS.FLIGHTS.ROOT, payload, {
       headers: { "Content-Type": "application/json" },
       withCredentials: true,
@@ -87,28 +92,29 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
     const id = Number(data?.id);
     if (!id) throw new Error("Flight creation failed");
     return id;
-  } catch (err: any) {
-    // Si crear falla (duplicado/validación), intenta reutilizar uno existente
+  };
+
+  try {
+    return await create();
+  } catch (err) {
+    // Fallback: reutilizar
     try {
       const { data } = await api.get(ENDPOINTS.FLIGHTS.ROOT, { withCredentials: true });
       const all: any[] = Array.isArray(data) ? data : [];
-      const dep = toIso(f.departureAt);
-      const num = (f.flightNumber || "").toUpperCase().trim();
+      const dep = toIsoLocal(f.departureAt);
 
       const match = all.find((x) => {
-        const sameNum =
-          (x.flightNumber || "").toUpperCase().trim() === num && num.length > 0;
-        const sameDep =
-          !!dep && !!x.departureAt && new Date(x.departureAt).toISOString() === dep;
-        const sameRoute =
-          (x.origin || "") === (f.origin || "") &&
-          (x.destination || "") === (f.destination || "");
-        return sameNum && sameDep && sameRoute;
+        const sameDep = !!dep && !!x.departureAt && x.departureAt.startsWith(dep);
+        const sameRoute = (x.origin || "") === (f.origin || "") &&
+                          (x.destination || "") === (f.destination || "");
+        return sameDep && sameRoute;
       });
 
       const id = match ? Number(match.id) : NaN;
       if (!isNaN(id) && id > 0) return id;
-      throw err;
+
+      // último intento: crear otra vez (por si el 1er fallo fue transitorio)
+      return await create();
     } catch {
       throw err;
     }
