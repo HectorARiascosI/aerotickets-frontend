@@ -48,4 +48,4 @@ export class FlightStream {
       this.source = undefined;
     }
   }
-}
+} 

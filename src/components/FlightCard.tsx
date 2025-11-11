@@ -174,3 +174,4 @@ function FlightCard({ flight }: Props) {
 }
 
 export default FlightCard;
+

@@ -52,4 +52,4 @@ export async function cancelReservation(id: number): Promise<void> {
   await api.delete(`${BASE}/${id}`, {
     withCredentials: true,
   });
-}
+} 
