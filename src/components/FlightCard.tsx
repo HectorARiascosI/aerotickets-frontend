@@ -5,7 +5,9 @@ import { createReservation } from "@/services/reservationService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
 
-export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
+type Props = { flight: Flight };
+
+const FlightCard: React.FC<Props> = ({ flight }) => {
   const [open, setOpen] = useState(false);
   const [seat, setSeat] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,16 +31,22 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
   const color = statusColors[flight.status || "SCHEDULED"] || "bg-gray-400";
 
   async function confirmReservation() {
-    try {
-      setLoading(true);
+    if (loading) return; // evita doble click
+    setLoading(true);
 
-      const seatNum = seat ? Number(seat.trim()) : undefined;
-      if (seatNum !== undefined && (Number.isNaN(seatNum) || seatNum <= 0)) {
-        alert("Número de asiento inválido.");
-        return;
+    try {
+      // Validar asiento opcional
+      let seatNum: number | undefined = undefined;
+      if (seat.trim().length > 0) {
+        const parsed = Number(seat.trim());
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+          alert("Número de asiento inválido.");
+          return;
+        }
+        seatNum = parsed;
       }
 
-      // Garantiza existencia del vuelo (idempotente)
+      // Asegura que el vuelo exista en tu BD (upsert idempotente)
       let flightId = (flight as any).id as number | undefined;
       if (!flightId) {
         flightId = await upsertFlightForReservation(flight);
@@ -47,14 +55,25 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
       const resp = await createReservation({
         flightId,
         seatNumber: seatNum,
+        seats: 1,
       });
 
       const seatShown = resp?.seatNumber ?? seatNum ?? "automático";
-      alert(`Reserva creada exitosamente:\n${airline} ${flightNumber}\nAsiento: ${seatShown}`);
+      alert(
+        `Reserva creada exitosamente:\n${airline} ${flightNumber}\nAsiento: ${seatShown}`
+      );
+
+      // reset UI
       setOpen(false);
       setSeat("");
     } catch (e: any) {
-      alert(e?.response?.data?.message ?? "Error inesperado en el servidor");
+      // Muestra mensaje del backend si viene
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "Error inesperado en el servidor";
+      alert(msg);
+      console.error("createReservation error:", e);
     } finally {
       setLoading(false);
     }
@@ -154,6 +173,7 @@ export const FlightCard: React.FC<{ flight: Flight }> = ({ flight }) => {
             <button
               onClick={() => setOpen(false)}
               className="px-4 py-2 rounded-md border text-sm hover:bg-gray-50 transition"
+              disabled={loading}
             >
               Cancelar
             </button>
