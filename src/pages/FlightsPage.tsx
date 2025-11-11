@@ -5,7 +5,7 @@ import {
   autocompleteAirports,
 } from "../services/flightService";
 import { FlightStream } from "../services/flightStream";
-import { FlightCard } from "../components/FlightCard";
+import FlightCard from "../components/FlightCard"; // ⬅️ default import
 
 type AirportOption = { iata: string; city: string; label: string };
 
