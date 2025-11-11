@@ -1,6 +1,7 @@
 import api from "@/api/client";
 import { ENDPOINTS } from "@/api/endpoints";
 import { normalizeFlight } from "@/utils/normalizeFlight";
+import { toIsoZ } from "@/utils/date";
 
 type LiveEndpoints = { AIRPORTS: string; FLIGHTS: string };
 
@@ -20,16 +21,6 @@ export type Flight = ReturnType<typeof normalizeFlight>;
 /** Normaliza texto para autocomplete */
 function normalizeText(text: string) {
   return (text || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
-}
-
-/** Formato que acepta tu backend: yyyy-MM-ddTHH:mm:ss (sin Z) */
-function toIsoLocal(x?: string) {
-  if (!x) return undefined;
-  const d = new Date(x);
-  if (isNaN(d.getTime())) return undefined;
-  const tzo = d.getTimezoneOffset() * 60000;
-  const local = new Date(d.getTime() - tzo);
-  return local.toISOString().slice(0, 19); // sin 'Z'
 }
 
 /** Buscar SIEMPRE en /live/... (mock remota) */
@@ -70,7 +61,7 @@ export async function autocompleteAirports(query: string) {
 /**
  * Upsert de vuelo compatible con el backend actual (sin flightNumber).
  * - Enviamos SOLO los campos que tu backend entiende.
- * - Fechas en ISO local (sin Z).
+ * - Fechas en ISO UTC (Z) para OffsetDateTime del backend.
  * - Fallback: si crear falla, busca por (origin, destination, departureAt).
  */
 export async function upsertFlightForReservation(f: Flight): Promise<number> {
@@ -78,8 +69,8 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
     airline: f.airline ?? "Desconocida",
     origin: f.origin ?? "",
     destination: f.destination ?? "",
-    departureAt: toIsoLocal(f.departureAt),
-    arriveAt: toIsoLocal(f.arrivalAt),
+    departureAt: toIsoZ(f.departureAt), // 👈 ahora con Z
+    arriveAt: toIsoZ(f.arrivalAt),      // 👈 ahora con Z
     totalSeats: typeof f.totalSeats === "number" ? f.totalSeats : 0,
     price: typeof f.price === "number" ? f.price : 0,
   };
@@ -97,23 +88,24 @@ export async function upsertFlightForReservation(f: Flight): Promise<number> {
   try {
     return await create();
   } catch (err) {
-    // Fallback: reutilizar
     try {
       const { data } = await api.get(ENDPOINTS.FLIGHTS.ROOT, { withCredentials: true });
       const all: any[] = Array.isArray(data) ? data : [];
-      const dep = toIsoLocal(f.departureAt);
+      const dep = toIsoZ(f.departureAt);
 
       const match = all.find((x) => {
-        const sameDep = !!dep && !!x.departureAt && x.departureAt.startsWith(dep);
-        const sameRoute = (x.origin || "") === (f.origin || "") &&
-                          (x.destination || "") === (f.destination || "");
+        const sameDep =
+          !!dep && !!x.departureAt &&
+          (x.departureAt === dep || x.departureAt.startsWith(dep.replace("Z", "")));
+        const sameRoute =
+          (x.origin || "") === (f.origin || "") &&
+          (x.destination || "") === (f.destination || "");
         return sameDep && sameRoute;
       });
 
       const id = match ? Number(match.id) : NaN;
       if (!isNaN(id) && id > 0) return id;
 
-      // último intento: crear otra vez (por si el 1er fallo fue transitorio)
       return await create();
     } catch {
       throw err;
