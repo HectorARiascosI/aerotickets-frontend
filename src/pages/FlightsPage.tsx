@@ -1,11 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  searchFlights,
-  Flight,
-  autocompleteAirports,
-} from "../services/flightService";
+import { searchFlights, Flight, autocompleteAirports } from "../services/flightService";
 import { FlightStream } from "../services/flightStream";
-import FlightCard from "../components/FlightCard"; // ⬅️ default import
+import FlightCard from "../components/FlightCard";
 
 type AirportOption = { iata: string; city: string; label: string };
 
@@ -21,7 +17,6 @@ export default function FlightsPage() {
   const [showOrig, setShowOrig] = useState(false);
   const [showDest, setShowDest] = useState(false);
 
-  // 🔹 Stream de vuelos en tiempo real
   useEffect(() => {
     const stream = new FlightStream();
     stream.connect((updated) => {
@@ -43,7 +38,6 @@ export default function FlightsPage() {
     return () => stream.disconnect();
   }, []);
 
-  // 🔹 Buscar vuelos
   async function handleSearch() {
     if (!origin || !destination) {
       alert("Por favor selecciona un origen y un destino válidos.");
@@ -55,7 +49,6 @@ export default function FlightsPage() {
     setLoading(false);
   }
 
-  // 🔹 Autocompletar con debounce
   const debounce = (fn: (...args: any[]) => void, ms = 250) => {
     let timer: any;
     return (...args: any[]) => {
@@ -65,19 +58,10 @@ export default function FlightsPage() {
   };
 
   const loadOrig = useMemo(
-    () =>
-      debounce(async (q: string) => {
-        setOrigOptions(await autocompleteAirports(q));
-      }),
-    []
+    () => debounce(async (q: string) => setOrigOptions(await autocompleteAirports(q))), []
   );
-
   const loadDest = useMemo(
-    () =>
-      debounce(async (q: string) => {
-        setDestOptions(await autocompleteAirports(q));
-      }),
-    []
+    () => debounce(async (q: string) => setDestOptions(await autocompleteAirports(q))), []
   );
 
   return (
@@ -86,35 +70,23 @@ export default function FlightsPage() {
         Seguimiento de vuelos en tiempo real
       </h1>
 
-      {/* 🔹 Buscador de vuelos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         <div className="relative">
           <input
             type="text"
             placeholder="Origen (ej: Bogotá o BOG)"
             value={origin}
-            onChange={(e) => {
-              setOrigin(e.target.value);
-              setShowOrig(true);
-              loadOrig(e.target.value);
-            }}
+            onChange={(e) => { setOrigin(e.target.value); setShowOrig(true); loadOrig(e.target.value); }}
             onFocus={() => setShowOrig(true)}
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           {showOrig && origOptions.length > 0 && (
-            <ul
-              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-              onMouseLeave={() => setShowOrig(false)}
-            >
+            <ul className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
+                onMouseLeave={() => setShowOrig(false)}>
               {origOptions.map((o) => (
-                <li
-                  key={o.iata}
-                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    setOrigin(o.iata);
-                    setShowOrig(false);
-                  }}
-                >
+                <li key={o.iata}
+                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                    onClick={() => { setOrigin(o.iata); setShowOrig(false); }}>
                   {o.label}
                 </li>
               ))}
@@ -127,28 +99,17 @@ export default function FlightsPage() {
             type="text"
             placeholder="Destino (ej: Medellín o MDE)"
             value={destination}
-            onChange={(e) => {
-              setDestination(e.target.value);
-              setShowDest(true);
-              loadDest(e.target.value);
-            }}
+            onChange={(e) => { setDestination(e.target.value); setShowDest(true); loadDest(e.target.value); }}
             onFocus={() => setShowDest(true)}
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           {showDest && destOptions.length > 0 && (
-            <ul
-              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-              onMouseLeave={() => setShowDest(false)}
-            >
+            <ul className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
+                onMouseLeave={() => setShowDest(false)}>
               {destOptions.map((o) => (
-                <li
-                  key={o.iata}
-                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    setDestination(o.iata);
-                    setShowDest(false);
-                  }}
-                >
+                <li key={o.iata}
+                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                    onClick={() => { setDestination(o.iata); setShowDest(false); }}>
                   {o.label}
                 </li>
               ))}
@@ -172,18 +133,12 @@ export default function FlightsPage() {
         </button>
       </div>
 
-      {/* 🔹 Resultados */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {!loading && flights.length === 0 && (
-          <p className="text-center text-gray-500 col-span-full">
-            No hay vuelos disponibles.
-          </p>
+          <p className="text-center text-gray-500 col-span-full">No hay vuelos disponibles.</p>
         )}
         {flights.map((f) => (
-          <FlightCard
-            key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
-            flight={f}
-          />
+          <FlightCard key={`${f.flightNumber}-${f.origin}-${f.departureAt}`} flight={f} />
         ))}
       </div>
     </div>
