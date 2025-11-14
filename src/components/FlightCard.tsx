@@ -39,19 +39,19 @@ function FlightCard({ flight }: Props) {
 
   async function confirmReservation() {
     if (loading) return;
+
+    let seatNum: number | undefined = undefined;
+    if (seat.trim().length > 0) {
+      const parsed = Number(seat.trim());
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        toast.error("Número de asiento inválido.");
+        return;
+      }
+      seatNum = parsed;
+    }
+
     setLoading(true);
     try {
-      let seatNum: number | undefined = undefined;
-      if (seat.trim().length > 0) {
-        const parsed = Number(seat.trim());
-        if (!Number.isFinite(parsed) || parsed <= 0) {
-          toast.error("Número de asiento inválido.");
-          setLoading(false);
-          return;
-        }
-        seatNum = parsed;
-      }
-
       let flightId = (flight as any).id as number | undefined;
       if (!flightId) {
         flightId = await upsertFlightForReservation(flight);
@@ -66,16 +66,14 @@ function FlightCard({ flight }: Props) {
       const seatShown = resp?.seatNumber ?? seatNum ?? "automático";
 
       toast.success(
-        `Reserva creada para ${airline} ${flightNumber} (asiento ${seatShown})`
+        `Reserva creada: ${airline} ${flightNumber} – Asiento ${seatShown}`
       );
 
       setOpen(false);
       setSeat("");
     } catch (e: any) {
       const msg =
-        e?.response?.data?.message ||
-        e?.message ||
-        "Error inesperado en el servidor";
+        e?.response?.data?.message || e?.message || "Error inesperado en el servidor";
       toast.error(msg);
       console.error("createReservation error:", e);
     } finally {
