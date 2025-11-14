@@ -34,6 +34,7 @@ function FlightCard({ flight }: Props) {
         minute: "2-digit",
       })
     : "—";
+	
 
   const color = statusColors[flight.status || "SCHEDULED"] || "bg-gray-400";
 
