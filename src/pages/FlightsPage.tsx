@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { searchFlights, Flight, autocompleteAirports } from "../services/flightService";
 import { FlightStream } from "../services/flightStream";
 import FlightCard from "../components/FlightCard";
+import toast from "react-hot-toast";
 
 type AirportOption = { iata: string; city: string; label: string };
 
@@ -40,13 +41,22 @@ export default function FlightsPage() {
 
   async function handleSearch() {
     if (!origin || !destination) {
-      alert("Por favor selecciona un origen y un destino válidos.");
+      toast.error("Selecciona un origen y un destino válidos.");
       return;
     }
+
     setLoading(true);
-    const list = await searchFlights(origin, destination, date);
-    setFlights(list);
-    setLoading(false);
+    try {
+      const list = await searchFlights(origin, destination, date);
+      setFlights(list);
+      if (list.length === 0) {
+        toast("No se encontraron vuelos para esos datos.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "No fue posible buscar los vuelos");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const debounce = (fn: (...args: any[]) => void, ms = 250) => {
@@ -58,10 +68,12 @@ export default function FlightsPage() {
   };
 
   const loadOrig = useMemo(
-    () => debounce(async (q: string) => setOrigOptions(await autocompleteAirports(q))), []
+    () => debounce(async (q: string) => setOrigOptions(await autocompleteAirports(q))),
+    []
   );
   const loadDest = useMemo(
-    () => debounce(async (q: string) => setDestOptions(await autocompleteAirports(q))), []
+    () => debounce(async (q: string) => setDestOptions(await autocompleteAirports(q))),
+    []
   );
 
   return (
@@ -76,17 +88,28 @@ export default function FlightsPage() {
             type="text"
             placeholder="Origen (ej: Bogotá o BOG)"
             value={origin}
-            onChange={(e) => { setOrigin(e.target.value); setShowOrig(true); loadOrig(e.target.value); }}
+            onChange={(e) => {
+              setOrigin(e.target.value);
+              setShowOrig(true);
+              loadOrig(e.target.value);
+            }}
             onFocus={() => setShowOrig(true)}
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           {showOrig && origOptions.length > 0 && (
-            <ul className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-                onMouseLeave={() => setShowOrig(false)}>
+            <ul
+              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
+              onMouseLeave={() => setShowOrig(false)}
+            >
               {origOptions.map((o) => (
-                <li key={o.iata}
-                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                    onClick={() => { setOrigin(o.iata); setShowOrig(false); }}>
+                <li
+                  key={o.iata}
+                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setOrigin(o.iata);
+                    setShowOrig(false);
+                  }}
+                >
                   {o.label}
                 </li>
               ))}
@@ -99,17 +122,28 @@ export default function FlightsPage() {
             type="text"
             placeholder="Destino (ej: Medellín o MDE)"
             value={destination}
-            onChange={(e) => { setDestination(e.target.value); setShowDest(true); loadDest(e.target.value); }}
+            onChange={(e) => {
+              setDestination(e.target.value);
+              setShowDest(true);
+              loadDest(e.target.value);
+            }}
             onFocus={() => setShowDest(true)}
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           {showDest && destOptions.length > 0 && (
-            <ul className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-                onMouseLeave={() => setShowDest(false)}>
+            <ul
+              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
+              onMouseLeave={() => setShowDest(false)}
+            >
               {destOptions.map((o) => (
-                <li key={o.iata}
-                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                    onClick={() => { setDestination(o.iata); setShowDest(false); }}>
+                <li
+                  key={o.iata}
+                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setDestination(o.iata);
+                    setShowDest(false);
+                  }}
+                >
                   {o.label}
                 </li>
               ))}
@@ -135,10 +169,15 @@ export default function FlightsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {!loading && flights.length === 0 && (
-          <p className="text-center text-gray-500 col-span-full">No hay vuelos disponibles.</p>
+          <p className="text-center text-gray-500 col-span-full">
+            No hay vuelos disponibles.
+          </p>
         )}
         {flights.map((f) => (
-          <FlightCard key={`${f.flightNumber}-${f.origin}-${f.departureAt}`} flight={f} />
+          <FlightCard
+            key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
+            flight={f}
+          />
         ))}
       </div>
     </div>
