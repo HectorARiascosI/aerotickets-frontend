@@ -4,6 +4,7 @@ import { Flight, upsertFlightForReservation } from "@/services/flightService";
 import { createReservation } from "@/services/reservationService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
+import toast from "react-hot-toast";
 
 type Props = { flight: Flight };
 
@@ -22,10 +23,16 @@ function FlightCard({ flight }: Props) {
   const aircraftType = flight.aircraftType || "—";
 
   const depTime = flight.departureAt
-    ? new Date(flight.departureAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(flight.departureAt).toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "—";
   const arrTime = flight.arrivalAt
-    ? new Date(flight.arrivalAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(flight.arrivalAt).toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "—";
 
   const color = statusColors[flight.status || "SCHEDULED"] || "bg-gray-400";
@@ -38,7 +45,8 @@ function FlightCard({ flight }: Props) {
       if (seat.trim().length > 0) {
         const parsed = Number(seat.trim());
         if (!Number.isFinite(parsed) || parsed <= 0) {
-          alert("Número de asiento inválido.");
+          toast.error("Número de asiento inválido.");
+          setLoading(false);
           return;
         }
         seatNum = parsed;
@@ -56,12 +64,19 @@ function FlightCard({ flight }: Props) {
       });
 
       const seatShown = resp?.seatNumber ?? seatNum ?? "automático";
-      alert(`Reserva creada exitosamente:\n${airline} ${flightNumber}\nAsiento: ${seatShown}`);
+
+      toast.success(
+        `Reserva creada para ${airline} ${flightNumber} (asiento ${seatShown})`
+      );
+
       setOpen(false);
       setSeat("");
     } catch (e: any) {
-      const msg = e?.response?.data?.message || e?.message || "Error inesperado en el servidor";
-      alert(msg);
+      const msg =
+        e?.response?.data?.message ||
+        e?.message ||
+        "Error inesperado en el servidor";
+      toast.error(msg);
       console.error("createReservation error:", e);
     } finally {
       setLoading(false);
@@ -79,11 +94,14 @@ function FlightCard({ flight }: Props) {
         <div className="flex justify-between items-start mb-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">
-              {airline} <span className="text-gray-500 text-sm">{flightNumber}</span>
+              {airline}{" "}
+              <span className="text-gray-500 text-sm">{flightNumber}</span>
             </h2>
             <p className="text-xs text-gray-500">{aircraftType}</p>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${color}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${color}`}
+          >
             {statusLabel(flight.status || "SCHEDULED")}
           </span>
         </div>
@@ -96,8 +114,16 @@ function FlightCard({ flight }: Props) {
           </div>
           <div className="flex flex-col items-center justify-center">
             <p className="text-lg text-gray-400 mb-1">✈️</p>
-            <p className={`text-xs ${flight.delayMinutes && flight.delayMinutes > 0 ? "text-yellow-600" : "text-green-600"}`}>
-              {flight.delayMinutes && flight.delayMinutes > 0 ? `Retraso ${flight.delayMinutes} min` : "A tiempo"}
+            <p
+              className={`text-xs ${
+                flight.delayMinutes && flight.delayMinutes > 0
+                  ? "text-yellow-600"
+                  : "text-green-600"
+              }`}
+            >
+              {flight.delayMinutes && flight.delayMinutes > 0
+                ? `Retraso ${flight.delayMinutes} min`
+                : "A tiempo"}
             </p>
           </div>
           <div className="text-right">
@@ -115,7 +141,9 @@ function FlightCard({ flight }: Props) {
 
         <div className="flex justify-between items-center mt-2">
           {typeof flight.price === "number" ? (
-            <p className="text-base font-semibold text-emerald-700">${flight.price.toLocaleString("es-CO")}</p>
+            <p className="text-base font-semibold text-emerald-700">
+              ${flight.price.toLocaleString("es-CO")}
+            </p>
           ) : (
             <span className="text-gray-400 text-sm">Sin precio</span>
           )}
@@ -129,7 +157,11 @@ function FlightCard({ flight }: Props) {
         </div>
       </motion.div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title={`Reserva en ${airline} ${flightNumber}`}>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={`Reserva en ${airline} ${flightNumber}`}
+      >
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-md p-3 text-sm text-gray-700">
             ✈️ {origin} → {destination}
@@ -174,4 +206,3 @@ function FlightCard({ flight }: Props) {
 }
 
 export default FlightCard;
-
