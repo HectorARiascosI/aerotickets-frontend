@@ -28,6 +28,9 @@ export const ENDPOINTS = {
     ROOT: "/api/reservations",
     MY: "/api/reservations/my",
   },
+  PAYMENTS: {
+    CHECKOUT_SESSION: "/api/payments/checkout-session",
+  },
   MISC: {
     HEALTH: "/health",
     HOLA: "/hola",

@@ -59,6 +59,7 @@
       .gitignore
       .project
       .settings\org.eclipse.core.resources.prefs
+      No se encuentra la ruta de acceso 'frontend_snapshot_20251113_185932.txt' porque no existe.
 
 
 ### FILE CONTENTS
@@ -204,6 +205,13 @@ export default defineConfig([
 ])
 ```
 
+
+
+===== FILE: frontend_snapshot_20251113_185932.txt =====
+
+
+===== FILE: frontend_snapshot_20251113_185932.txt =====
+[[WARN]] No se pudo leer este archivo: No se encuentra la ruta de acceso 'frontend_snapshot_20251113_185932.txt' porque no existe.
 
 
 ===== FILE: .\index.html =====
@@ -4062,6 +4070,7 @@ import { Flight, upsertFlightForReservation } from "@/services/flightService";
 import { createReservation } from "@/services/reservationService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
+import toast from "react-hot-toast";
 
 type Props = { flight: Flight };
 
@@ -4080,28 +4089,36 @@ function FlightCard({ flight }: Props) {
   const aircraftType = flight.aircraftType || "—";
 
   const depTime = flight.departureAt
-    ? new Date(flight.departureAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(flight.departureAt).toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "—";
   const arrTime = flight.arrivalAt
-    ? new Date(flight.arrivalAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(flight.arrivalAt).toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "—";
+	
 
   const color = statusColors[flight.status || "SCHEDULED"] || "bg-gray-400";
 
   async function confirmReservation() {
     if (loading) return;
+
+    let seatNum: number | undefined = undefined;
+    if (seat.trim().length > 0) {
+      const parsed = Number(seat.trim());
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        toast.error("Número de asiento inválido.");
+        return;
+      }
+      seatNum = parsed;
+    }
+
     setLoading(true);
     try {
-      let seatNum: number | undefined = undefined;
-      if (seat.trim().length > 0) {
-        const parsed = Number(seat.trim());
-        if (!Number.isFinite(parsed) || parsed <= 0) {
-          alert("Número de asiento inválido.");
-          return;
-        }
-        seatNum = parsed;
-      }
-
       let flightId = (flight as any).id as number | undefined;
       if (!flightId) {
         flightId = await upsertFlightForReservation(flight);
@@ -4114,12 +4131,17 @@ function FlightCard({ flight }: Props) {
       });
 
       const seatShown = resp?.seatNumber ?? seatNum ?? "automático";
-      alert(`Reserva creada exitosamente:\n${airline} ${flightNumber}\nAsiento: ${seatShown}`);
+
+      toast.success(
+        `Reserva creada: ${airline} ${flightNumber} – Asiento ${seatShown}`
+      );
+
       setOpen(false);
       setSeat("");
     } catch (e: any) {
-      const msg = e?.response?.data?.message || e?.message || "Error inesperado en el servidor";
-      alert(msg);
+      const msg =
+        e?.response?.data?.message || e?.message || "Error inesperado en el servidor";
+      toast.error(msg);
       console.error("createReservation error:", e);
     } finally {
       setLoading(false);
@@ -4137,11 +4159,14 @@ function FlightCard({ flight }: Props) {
         <div className="flex justify-between items-start mb-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">
-              {airline} <span className="text-gray-500 text-sm">{flightNumber}</span>
+              {airline}{" "}
+              <span className="text-gray-500 text-sm">{flightNumber}</span>
             </h2>
             <p className="text-xs text-gray-500">{aircraftType}</p>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${color}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${color}`}
+          >
             {statusLabel(flight.status || "SCHEDULED")}
           </span>
         </div>
@@ -4154,8 +4179,16 @@ function FlightCard({ flight }: Props) {
           </div>
           <div className="flex flex-col items-center justify-center">
             <p className="text-lg text-gray-400 mb-1">✈️</p>
-            <p className={`text-xs ${flight.delayMinutes && flight.delayMinutes > 0 ? "text-yellow-600" : "text-green-600"}`}>
-              {flight.delayMinutes && flight.delayMinutes > 0 ? `Retraso ${flight.delayMinutes} min` : "A tiempo"}
+            <p
+              className={`text-xs ${
+                flight.delayMinutes && flight.delayMinutes > 0
+                  ? "text-yellow-600"
+                  : "text-green-600"
+              }`}
+            >
+              {flight.delayMinutes && flight.delayMinutes > 0
+                ? `Retraso ${flight.delayMinutes} min`
+                : "A tiempo"}
             </p>
           </div>
           <div className="text-right">
@@ -4173,7 +4206,9 @@ function FlightCard({ flight }: Props) {
 
         <div className="flex justify-between items-center mt-2">
           {typeof flight.price === "number" ? (
-            <p className="text-base font-semibold text-emerald-700">${flight.price.toLocaleString("es-CO")}</p>
+            <p className="text-base font-semibold text-emerald-700">
+              ${flight.price.toLocaleString("es-CO")}
+            </p>
           ) : (
             <span className="text-gray-400 text-sm">Sin precio</span>
           )}
@@ -4187,7 +4222,11 @@ function FlightCard({ flight }: Props) {
         </div>
       </motion.div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title={`Reserva en ${airline} ${flightNumber}`}>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={`Reserva en ${airline} ${flightNumber}`}
+      >
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-md p-3 text-sm text-gray-700">
             ✈️ {origin} → {destination}
@@ -4232,8 +4271,6 @@ function FlightCard({ flight }: Props) {
 }
 
 export default FlightCard;
-
-
 
 
 ===== FILE: .\src\components\FlightFilters.tsx =====
@@ -4692,6 +4729,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { searchFlights, Flight, autocompleteAirports } from "../services/flightService";
 import { FlightStream } from "../services/flightStream";
 import FlightCard from "../components/FlightCard";
+import toast from "react-hot-toast";
 
 type AirportOption = { iata: string; city: string; label: string };
 
@@ -4730,13 +4768,22 @@ export default function FlightsPage() {
 
   async function handleSearch() {
     if (!origin || !destination) {
-      alert("Por favor selecciona un origen y un destino válidos.");
+      toast.error("Selecciona un origen y un destino válidos.");
       return;
     }
+
     setLoading(true);
-    const list = await searchFlights(origin, destination, date);
-    setFlights(list);
-    setLoading(false);
+    try {
+      const list = await searchFlights(origin, destination, date);
+      setFlights(list);
+      if (list.length === 0) {
+        toast("No se encontraron vuelos para esos datos.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "No fue posible buscar los vuelos");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const debounce = (fn: (...args: any[]) => void, ms = 250) => {
@@ -4748,10 +4795,12 @@ export default function FlightsPage() {
   };
 
   const loadOrig = useMemo(
-    () => debounce(async (q: string) => setOrigOptions(await autocompleteAirports(q))), []
+    () => debounce(async (q: string) => setOrigOptions(await autocompleteAirports(q))),
+    []
   );
   const loadDest = useMemo(
-    () => debounce(async (q: string) => setDestOptions(await autocompleteAirports(q))), []
+    () => debounce(async (q: string) => setDestOptions(await autocompleteAirports(q))),
+    []
   );
 
   return (
@@ -4766,17 +4815,28 @@ export default function FlightsPage() {
             type="text"
             placeholder="Origen (ej: Bogotá o BOG)"
             value={origin}
-            onChange={(e) => { setOrigin(e.target.value); setShowOrig(true); loadOrig(e.target.value); }}
+            onChange={(e) => {
+              setOrigin(e.target.value);
+              setShowOrig(true);
+              loadOrig(e.target.value);
+            }}
             onFocus={() => setShowOrig(true)}
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           {showOrig && origOptions.length > 0 && (
-            <ul className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-                onMouseLeave={() => setShowOrig(false)}>
+            <ul
+              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
+              onMouseLeave={() => setShowOrig(false)}
+            >
               {origOptions.map((o) => (
-                <li key={o.iata}
-                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                    onClick={() => { setOrigin(o.iata); setShowOrig(false); }}>
+                <li
+                  key={o.iata}
+                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setOrigin(o.iata);
+                    setShowOrig(false);
+                  }}
+                >
                   {o.label}
                 </li>
               ))}
@@ -4789,17 +4849,28 @@ export default function FlightsPage() {
             type="text"
             placeholder="Destino (ej: Medellín o MDE)"
             value={destination}
-            onChange={(e) => { setDestination(e.target.value); setShowDest(true); loadDest(e.target.value); }}
+            onChange={(e) => {
+              setDestination(e.target.value);
+              setShowDest(true);
+              loadDest(e.target.value);
+            }}
             onFocus={() => setShowDest(true)}
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           {showDest && destOptions.length > 0 && (
-            <ul className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-                onMouseLeave={() => setShowDest(false)}>
+            <ul
+              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
+              onMouseLeave={() => setShowDest(false)}
+            >
               {destOptions.map((o) => (
-                <li key={o.iata}
-                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                    onClick={() => { setDestination(o.iata); setShowDest(false); }}>
+                <li
+                  key={o.iata}
+                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setDestination(o.iata);
+                    setShowDest(false);
+                  }}
+                >
                   {o.label}
                 </li>
               ))}
@@ -4825,16 +4896,20 @@ export default function FlightsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {!loading && flights.length === 0 && (
-          <p className="text-center text-gray-500 col-span-full">No hay vuelos disponibles.</p>
+          <p className="text-center text-gray-500 col-span-full">
+            No hay vuelos disponibles.
+          </p>
         )}
         {flights.map((f) => (
-          <FlightCard key={`${f.flightNumber}-${f.origin}-${f.departureAt}`} flight={f} />
+          <FlightCard
+            key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
+            flight={f}
+          />
         ))}
       </div>
     </div>
   );
 }
-
 
 
 ===== FILE: .\src\pages\ForgotPasswordPage.tsx =====
