@@ -1,3 +1,4 @@
+// src/services/reservationService.ts
 import api from "@/api/client";
 import { ENDPOINTS } from "@/api/endpoints";
 
@@ -6,7 +7,7 @@ const BASE = ENDPOINTS.RESERVATIONS.ROOT;
 export interface CreateReservationPayload {
   flightId: number;
   seatNumber?: number;
-  seats?: number; // cantidad de sillas (>=1)
+  seats?: number;
 }
 
 export type Reservation = {
@@ -14,23 +15,25 @@ export type Reservation = {
   status?: "ACTIVE" | "CANCELLED" | string;
   createdAt?: string;
 
-  // Datos útiles del vuelo (si el backend los incluye en la respuesta)
   flightId?: number;
   airline?: string;
   origin?: string;
   destination?: string;
   departureAt?: string;
-  arrivalAt?: string; // preferido
-  arriveAt?: string;  // compatibilidad
+  arrivalAt?: string;
+  arriveAt?: string;
   price?: number | null;
 
   seatNumber?: number;
 };
 
-export async function createReservation(payload: CreateReservationPayload): Promise<Reservation> {
+export async function createReservation(
+  payload: CreateReservationPayload
+): Promise<Reservation> {
   const body = {
     flightId: payload.flightId,
-    seatNumber: typeof payload.seatNumber === "number" ? payload.seatNumber : undefined,
+    seatNumber:
+      typeof payload.seatNumber === "number" ? payload.seatNumber : undefined,
     seats: Math.max(1, payload.seats ?? 1),
   };
 
@@ -52,4 +55,4 @@ export async function cancelReservation(id: number): Promise<void> {
   await api.delete(`${BASE}/${id}`, {
     withCredentials: true,
   });
-} 
+}

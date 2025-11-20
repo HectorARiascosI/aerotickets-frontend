@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+// src/components/FlightCard.tsx
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Flight, upsertFlightForReservation } from "@/services/flightService";
 import { createReservation } from "@/services/reservationService";
+import { createCheckoutSession } from "@/services/paymentService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
 import toast from "react-hot-toast";
@@ -34,7 +36,6 @@ function FlightCard({ flight }: Props) {
         minute: "2-digit",
       })
     : "—";
-	
 
   const color = statusColors[flight.status || "SCHEDULED"] || "bg-gray-400";
 
@@ -72,11 +73,20 @@ function FlightCard({ flight }: Props) {
 
       setOpen(false);
       setSeat("");
+
+      const session = await createCheckoutSession(flightId);
+      if (session.url) {
+        window.location.href = session.url;
+      } else {
+        toast.error("Stripe no devolvió una URL de pago.");
+      }
     } catch (e: any) {
       const msg =
-        e?.response?.data?.message || e?.message || "Error inesperado en el servidor";
+        e?.response?.data?.message ||
+        e?.message ||
+        "Error inesperado en el servidor";
       toast.error(msg);
-      console.error("createReservation error:", e);
+      console.error("createReservation or payment error:", e);
     } finally {
       setLoading(false);
     }
@@ -112,7 +122,7 @@ function FlightCard({ flight }: Props) {
             <p className="text-gray-500 text-xs">{depTime}</p>
           </div>
           <div className="flex flex-col items-center justify-center">
-            <p className="text-lg text-gray-400 mb-1">✈️</p>
+            <p className="text-xs text-gray-500 mb-1">Ruta</p>
             <p
               className={`text-xs ${
                 flight.delayMinutes && flight.delayMinutes > 0
@@ -163,9 +173,9 @@ function FlightCard({ flight }: Props) {
       >
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-md p-3 text-sm text-gray-700">
-            ✈️ {origin} → {destination}
+            Ruta: {origin} → {destination}
             <br />
-            🕒 {depTime} - {arrTime}
+            Horario: {depTime} - {arrTime}
             <br />
             Modelo: {aircraftType}
           </div>
@@ -195,7 +205,7 @@ function FlightCard({ flight }: Props) {
               disabled={loading}
               className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60 transition"
             >
-              {loading ? "Procesando..." : "Confirmar"}
+              {loading ? "Procesando..." : "Confirmar y pagar"}
             </button>
           </div>
         </div>

@@ -1,5 +1,10 @@
+// src/pages/MyReservationsPage.tsx
 import { useEffect, useMemo, useState } from "react";
-import { listMyReservations, cancelReservation } from "@/services/reservationService";
+import {
+  listMyReservations,
+  cancelReservation,
+  Reservation,
+} from "@/services/reservationService";
 import { createCheckoutSession } from "@/services/paymentService";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 import Loader from "@/components/ui/Loader";
@@ -10,9 +15,7 @@ import { formatCurrency, formatDateTime } from "@/utils/format";
 import toast from "react-hot-toast";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-type Row = Awaited<ReturnType<typeof listMyReservations>> extends (infer U)[]
-  ? U
-  : never;
+type Row = Reservation;
 
 export default function MyReservationsPage() {
   const [loading, setLoading] = useState(true);
@@ -22,11 +25,11 @@ export default function MyReservationsPage() {
 
   const ordered = useMemo(
     () =>
-      [...rows].sort(
-        (a, b) =>
-          new Date(b?.createdAt || 0).getTime() -
-          new Date(a?.createdAt || 0).getTime()
-      ),
+      [...rows].sort((a, b) => {
+        const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bDate - aDate;
+      }),
     [rows]
   );
 
@@ -36,7 +39,9 @@ export default function MyReservationsPage() {
       const data = await listMyReservations();
       setRows(data);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? "No fue posible cargar reservas");
+      toast.error(
+        e?.response?.data?.message ?? "No fue posible cargar reservas"
+      );
     } finally {
       setLoading(false);
     }
@@ -65,7 +70,7 @@ export default function MyReservationsPage() {
   const canPay = (r: Row) => {
     if (r.status !== "ACTIVE") return false;
     if (!r.departureAt) return false;
-    const dep = new Date(r.departureAt as any);
+    const dep = new Date(r.departureAt);
     return dep.getTime() > Date.now();
   };
 
@@ -95,7 +100,7 @@ export default function MyReservationsPage() {
   if (loading) return <Loader label="Cargando tus reservas..." />;
   if (ordered.length === 0) return <EmptyState title="Aún no tienes reservas" />;
 
-  const getArrival = (r: Row) => (r as any).arrivalAt || (r as any).arriveAt || "";
+  const getArrival = (r: Row) => r.arrivalAt || r.arriveAt || "";
 
   return (
     <div className="max-w-6xl mx-auto py-6 px-4">
@@ -126,7 +131,7 @@ export default function MyReservationsPage() {
                   {r.origin} → {r.destination}
                 </div>
                 <div className="text-xs text-gray-500">{r.airline}</div>
-                {r.seatNumber && (
+                {typeof r.seatNumber === "number" && (
                   <div className="text-xs text-gray-500">
                     Asiento: {r.seatNumber}
                   </div>
@@ -135,7 +140,7 @@ export default function MyReservationsPage() {
 
               <TD>
                 <div className="text-sm text-gray-700">
-                  {formatDateTime((r as any).departureAt || "")}
+                  {formatDateTime(r.departureAt || "")}
                 </div>
                 <div className="text-xs text-gray-500">
                   {formatDateTime(getArrival(r))}
@@ -143,7 +148,7 @@ export default function MyReservationsPage() {
               </TD>
 
               <TD className="text-right font-medium text-gray-800">
-                {formatCurrency(((r as any).price as number) ?? 0)}
+                {formatCurrency((r.price as number) ?? 0)}
               </TD>
 
               <TD className="text-center">
