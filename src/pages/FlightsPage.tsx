@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { searchFlights, Flight, autocompleteAirports } from "../services/flightService";
 import { FlightStream } from "../services/flightStream";
 import FlightCard from "../components/FlightCard";
+import FlightRouteMap from "../components/FlightRouteMap";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
-import { FaPlane, FaSearch, FaCalendarAlt } from "react-icons/fa";
+import { FaPlane, FaSearch, FaCalendarAlt, FaMap } from "react-icons/fa";
 
 type AirportOption = { iata: string; city: string; label: string };
 
@@ -238,6 +239,24 @@ export default function FlightsPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Mapa de ruta */}
+        {origin && destination && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-8"
+          >
+            <div className="glass-effect rounded-2xl shadow-soft p-6">
+              <h2 className="text-2xl font-bold gradient-text mb-4 flex items-center gap-2">
+                <FaMap />
+                Ruta de vuelo: {origin} → {destination}
+              </h2>
+              <FlightRouteMap origin={origin} destination={destination} className="h-96" />
+            </div>
+          </motion.div>
+        )}
 
         {/* Resultados */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
