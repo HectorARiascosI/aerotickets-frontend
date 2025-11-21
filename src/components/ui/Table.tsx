@@ -1,6 +1,6 @@
 export function Table({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto border border-gray-200 rounded-lg">
+    <div className="overflow-x-auto">
       <table className="min-w-full text-sm">{children}</table>
     </div>
   )
@@ -12,10 +12,14 @@ export const THead = ({ children }: { children: React.ReactNode }) => (
 
 export const TBody = ({ children }: { children: React.ReactNode }) => <tbody className="divide-y">{children}</tbody>
 
-export const TR = ({ children }: { children: React.ReactNode }) => <tr className="hover:bg-gray-50">{children}</tr>
-
-export const TH = ({ children }: { children: React.ReactNode }) => (
-  <th className="text-left font-semibold px-4 py-3">{children}</th>
+export const TR = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <tr className={className || "hover:bg-gray-50"}>{children}</tr>
 )
 
-export const TD = ({ children }: { children: React.ReactNode }) => <td className="px-4 py-3">{children}</td>
+export const TH = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <th className={`font-semibold px-4 py-3 ${className || "text-left"}`}>{children}</th>
+)
+
+export const TD = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <td className={`px-4 py-3 ${className || ""}`}>{children}</td>
+)
