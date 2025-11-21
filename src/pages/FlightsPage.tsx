@@ -90,12 +90,12 @@ export default function FlightsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="w-full px-6 lg:px-12 xl:px-16 py-6 lg:py-10">
         {/* Header con animación */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 sm:mb-12"
+          className="text-center mb-8"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
             <motion.div
@@ -108,7 +108,7 @@ export default function FlightsPage() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text mb-3">
             Encuentra tu vuelo perfecto
           </h1>
-          <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+          <p className="text-gray-600 text-base sm:text-lg">
             Busca y reserva vuelos en tiempo real con las mejores aerolíneas
           </p>
         </motion.div>
@@ -118,9 +118,9 @@ export default function FlightsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-effect rounded-2xl shadow-soft p-4 sm:p-8 mb-8 sm:mb-12"
+          className="glass-effect rounded-2xl shadow-soft p-6 lg:p-8 mb-8 max-w-6xl mx-auto"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* Origen */}
             <AirportSelector
               value={origin}
@@ -178,14 +178,14 @@ export default function FlightsPage() {
 
         {/* Contenedor principal con mapa y resultados */}
         {origin && destination && flights.length > 0 ? (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Columna de resultados (2/3 del espacio) */}
-            <div className="xl:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Columna de resultados (8/12 del espacio) */}
+            <div className="lg:col-span-8 space-y-6">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <FaPlane className="text-primary-500" />
                 Vuelos disponibles ({flights.length})
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {flights.map((f, index) => (
                   <motion.div
                     key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
@@ -199,38 +199,38 @@ export default function FlightsPage() {
               </div>
             </div>
 
-            {/* Columna del mapa (1/3 del espacio, sticky) */}
-            <div className="xl:col-span-1">
+            {/* Columna del mapa (4/12 del espacio, sticky) */}
+            <div className="lg:col-span-4">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
                 className="sticky top-24"
               >
-                <div className="glass-effect rounded-2xl shadow-soft p-4">
-                  <h2 className="text-lg font-bold gradient-text mb-3 flex items-center gap-2">
+                <div className="glass-effect rounded-2xl shadow-soft p-5">
+                  <h2 className="text-lg font-bold gradient-text mb-4 flex items-center gap-2">
                     <FaMap />
                     Ruta: {origin} → {destination}
                   </h2>
-                  <FlightRouteMap origin={origin} destination={destination} className="h-[600px]" />
+                  <FlightRouteMap origin={origin} destination={destination} className="h-[700px] rounded-xl" />
                 </div>
               </motion.div>
             </div>
           </div>
         ) : origin && destination && !loading ? (
-          /* Mapa a pantalla completa cuando no hay resultados */
+          /* Mapa a pantalla completa cuando no hay resultados */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mb-8"
+            className="mb-8 max-w-6xl mx-auto"
           >
-            <div className="glass-effect rounded-2xl shadow-soft p-6">
-              <h2 className="text-2xl font-bold gradient-text mb-4 flex items-center gap-2">
+            <div className="glass-effect rounded-2xl shadow-soft p-8">
+              <h2 className="text-2xl font-bold gradient-text mb-6 flex items-center gap-2">
                 <FaMap />
                 Ruta de vuelo: {origin} → {destination}
               </h2>
-              <FlightRouteMap origin={origin} destination={destination} className="h-[500px]" />
+              <FlightRouteMap origin={origin} destination={destination} className="h-[600px] rounded-xl" />
             </div>
           </motion.div>
         ) : null}
