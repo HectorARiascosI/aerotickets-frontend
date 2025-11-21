@@ -218,7 +218,7 @@ export default function FlightsPage() {
             </div>
           </div>
         ) : origin && destination && !loading ? (
-          /* Mapa a pantalla completa cuando no hay resultados */}
+          /* Mapa a pantalla completa cuando no hay resultados */
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
