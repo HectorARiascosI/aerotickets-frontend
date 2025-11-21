@@ -40,7 +40,9 @@ export default function LoginPage() {
       await login(data.email, data.password)
       navigate(from, { replace: true })
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? MESSAGES.AUTH.LOGIN_ERROR)
+      const errorMessage = e?.response?.data?.message ?? MESSAGES.AUTH.LOGIN_ERROR
+      toast.error(errorMessage)
+      throw e // Re-throw para que react-hook-form maneje el estado isSubmitting correctamente
     }
   }
 

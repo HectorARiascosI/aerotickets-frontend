@@ -40,7 +40,9 @@ export default function RegisterPage() {
       toast.success(MESSAGES.AUTH.REGISTER_SUCCESS)
       navigate(ROUTES.LOGIN, { replace: true })
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? MESSAGES.AUTH.REGISTER_ERROR)
+      const errorMessage = e?.response?.data?.message ?? MESSAGES.AUTH.REGISTER_ERROR
+      toast.error(errorMessage)
+      throw e // Re-throw para que react-hook-form maneje el estado isSubmitting correctamente
     }
   }
 

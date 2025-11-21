@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import AIChatBot from "@/components/AIChatBot";
 import ProtectedRoute from "@/auth/ProtectedRoute";
 import { Suspense, lazy } from "react";
 
@@ -45,6 +46,7 @@ export default function AppRoutes() {
           <Route path="*" element={<div className="p-6">404 — Página no encontrada</div>} />
         </Routes>
       </Suspense>
+      <AIChatBot />
     </>
   );
 }

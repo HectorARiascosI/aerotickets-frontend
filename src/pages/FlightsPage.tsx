@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { searchFlights, Flight } from "../services/flightService";
 import { FlightStream } from "../services/flightStream";
 import FlightCard from "../components/FlightCard";
@@ -13,6 +14,7 @@ import { STORAGE_KEYS, LABELS, MESSAGES } from "@/constants";
 
 
 export default function FlightsPage() {
+  const [urlSearchParams] = useSearchParams();
   const [origin, setOrigin] = useState(() => localStorage.getItem(STORAGE_KEYS.FLIGHTS_SEARCH_ORIGIN) || "");
   const [destination, setDestination] = useState(() => localStorage.getItem(STORAGE_KEYS.FLIGHTS_SEARCH_DESTINATION) || "");
   const [date, setDate] = useState(() => {
@@ -28,6 +30,26 @@ export default function FlightsPage() {
     return savedFlights ? JSON.parse(savedFlights) : [];
   });
   const [loading, setLoading] = useState(false);
+
+  // Detectar parámetros del chatbot
+  useEffect(() => {
+    const urlOrigin = urlSearchParams.get('origin');
+    const urlDestination = urlSearchParams.get('destination');
+    const urlDate = urlSearchParams.get('date');
+    
+    if (urlOrigin || urlDestination || urlDate) {
+      if (urlOrigin) setOrigin(urlOrigin);
+      if (urlDestination) setDestination(urlDestination);
+      if (urlDate) setDate(urlDate);
+      
+      // Auto-buscar si tenemos origen y destino
+      if (urlOrigin && urlDestination) {
+        setTimeout(() => {
+          handleSearch();
+        }, 500);
+      }
+    }
+  }, [urlSearchParams]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.FLIGHTS_SEARCH_ORIGIN, origin);

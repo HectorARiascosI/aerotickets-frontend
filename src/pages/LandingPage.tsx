@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FaPlane, FaGlobe, FaShieldAlt, FaClock, FaTicketAlt, FaArrowRight } from "react-icons/fa";
 import { useAuth } from "@/auth/AuthContext";
 import { useEffect } from "react";
+import { ROUTES } from "@/constants";
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -11,7 +12,7 @@ export default function LandingPage() {
   // Si el usuario ya está autenticado, redirigir a flights
   useEffect(() => {
     if (user) {
-      navigate("/flights", { replace: true });
+      navigate(ROUTES.FLIGHTS, { replace: true });
     }
   }, [user, navigate]);
   const features = [
@@ -56,14 +57,14 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  to="/register"
+                  to={ROUTES.REGISTER}
                   className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-lg font-semibold hover:shadow-glow transition-all transform hover:scale-105"
                 >
                   Comenzar ahora
                   <FaArrowRight />
                 </Link>
                 <Link
-                  to="/login"
+                  to={ROUTES.LOGIN}
                   className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-primary-600 transition-all"
                 >
                   Iniciar sesión
@@ -186,7 +187,7 @@ export default function LandingPage() {
               Únete a miles de viajeros que confían en nosotros para sus aventuras
             </p>
             <Link
-              to="/register"
+              to={ROUTES.REGISTER}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 rounded-lg font-semibold hover:shadow-glow transition-all transform hover:scale-105"
             >
               Crear cuenta gratis
