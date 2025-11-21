@@ -1,8 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaPlane, FaGlobe, FaShieldAlt, FaClock, FaTicketAlt, FaArrowRight } from "react-icons/fa";
+import { useAuth } from "@/auth/AuthContext";
+import { useEffect } from "react";
 
 export default function LandingPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Si el usuario ya está autenticado, redirigir a flights
+  useEffect(() => {
+    if (user) {
+      navigate("/flights", { replace: true });
+    }
+  }, [user, navigate]);
   const features = [
     {
       icon: <FaGlobe className="text-4xl text-primary-500" />,

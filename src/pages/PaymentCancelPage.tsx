@@ -7,11 +7,24 @@ export default function PaymentCancelPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Prevenir navegación hacia atrás
+    window.history.pushState(null, "", window.location.href);
+    
+    const handlePopState = () => {
+      window.history.pushState(null, "", window.location.href);
+      navigate("/reservations", { replace: true });
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
     const timeout = setTimeout(() => {
       navigate("/reservations", { replace: true });
     }, 5000);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      clearTimeout(timeout);
+    };
   }, [navigate]);
 
   const goNow = () => {

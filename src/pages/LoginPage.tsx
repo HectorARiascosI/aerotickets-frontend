@@ -26,6 +26,7 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       await login(data.email, data.password)
+      // Usar replace para evitar que el usuario vuelva al login con el botón atrás
       navigate(from, { replace: true })
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'No fue posible iniciar sesión')

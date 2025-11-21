@@ -24,7 +24,8 @@ export default function RegisterPage() {
     try {
       await registerUser(data)
       toast.success('Cuenta creada, ahora inicia sesión')
-      navigate('/login')
+      // Usar replace para evitar que el usuario vuelva al registro con el botón atrás
+      navigate('/login', { replace: true })
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'No fue posible crear la cuenta')
     }
