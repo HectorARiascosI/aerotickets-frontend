@@ -85,3 +85,10 @@ export async function confirmPayment(flightId: number): Promise<void> {
     withCredentials: true,
   });
 }
+
+export async function clearReservationHistory(): Promise<number> {
+  const { data } = await api.delete<number>(`${BASE}/clear-history`, {
+    withCredentials: true,
+  });
+  return data;
+}

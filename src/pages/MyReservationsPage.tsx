@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   listMyReservations,
   cancelReservation,
+  clearReservationHistory,
   Reservation,
 } from "@/services/reservationService";
 import { createCheckoutSession } from "@/services/paymentService";
@@ -94,20 +95,14 @@ export default function MyReservationsPage() {
   const onClearHistoryConfirm = async () => {
     setClearingHistory(true);
     try {
-      // Cancelar todas las reservas pasadas o canceladas
-      const promises = oldReservations.map(r => {
-        if (r.status === "ACTIVE") {
-          return cancelReservation(r.id);
-        }
-        return Promise.resolve();
-      });
-      
-      await Promise.all(promises);
-      toast.success(`Se limpiaron ${oldReservations.length} reserva(s) del historial`);
+      const deletedCount = await clearReservationHistory();
+      toast.success(`Se eliminaron ${deletedCount} reserva(s) del historial`);
       await load();
       setShowClearHistoryDialog(false);
     } catch (e: any) {
-      toast.error("No fue posible limpiar el historial");
+      toast.error(
+        e?.response?.data?.message ?? "No fue posible limpiar el historial"
+      );
     } finally {
       setClearingHistory(false);
     }
