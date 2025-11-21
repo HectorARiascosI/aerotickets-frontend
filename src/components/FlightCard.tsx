@@ -6,6 +6,7 @@ import { createCheckoutSession } from "@/services/paymentService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
 import SeatSelector from "@/components/SeatSelector";
+import AircraftInfo from "@/components/AircraftInfo";
 import toast from "react-hot-toast";
 import { FaPlane, FaClock, FaMapMarkerAlt, FaCalendarAlt, FaDoorOpen, FaSuitcase, FaChair } from "react-icons/fa";
 
@@ -220,6 +221,9 @@ function FlightCard({ flight }: Props) {
               onSelectSeat={setSelectedSeat}
             />
           </div>
+
+          {/* Información de la aeronave */}
+          <AircraftInfo aircraftType={aircraftType} airline={airline} />
 
           {/* Precio y botones */}
           <div className="border-t pt-4">
