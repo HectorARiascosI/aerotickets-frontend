@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -41,9 +41,26 @@ function FitBounds({ origin, destination }: { origin: string; destination: strin
 }
 
 export default function FlightRouteMap({ origin, destination, className = "" }: FlightRouteMapProps) {
+  const [tileProvider, setTileProvider] = useState(0);
   const originAirport = COLOMBIA_AIRPORTS[origin];
   const destAirport = COLOMBIA_AIRPORTS[destination];
   const flightRoute = getFlightRoute(origin, destination);
+
+  // Proveedores de tiles alternativos
+  const tileProviders = [
+    {
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    },
+    {
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    },
+    {
+      url: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png",
+      attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>',
+    },
+  ];
 
   // Si no se encuentran los aeropuertos, no mostrar el mapa
   if (!originAirport || !destAirport) {
@@ -89,8 +106,19 @@ export default function FlightRouteMap({ origin, destination, className = "" }: 
         style={{ minHeight: "500px" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={tileProviders[tileProvider].attribution}
+          url={tileProviders[tileProvider].url}
+          maxZoom={19}
+          errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+          eventHandlers={{
+            tileerror: () => {
+              // Si hay error, intentar con el siguiente proveedor
+              if (tileProvider < tileProviders.length - 1) {
+                console.log(`Tile error, switching to provider ${tileProvider + 1}`);
+                setTileProvider(prev => prev + 1);
+              }
+            },
+          }}
         />
 
         {/* Marcador de origen */}
