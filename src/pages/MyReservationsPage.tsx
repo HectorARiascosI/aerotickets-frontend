@@ -9,6 +9,7 @@ import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 import Loader from "@/components/ui/Loader";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -21,6 +22,8 @@ export default function MyReservationsPage() {
   const [cancelingId, setCancelingId] = useState<number | null>(null);
   const [payingId, setPayingId] = useState<number | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [reservationToCancel, setReservationToCancel] = useState<number | null>(null);
 
   const ordered = useMemo(
     () =>
@@ -50,13 +53,21 @@ export default function MyReservationsPage() {
     load();
   }, []);
 
-  const onCancel = async (id: number) => {
-    if (!window.confirm("¿Seguro que deseas cancelar esta reserva?")) return;
-    setCancelingId(id);
+  const onCancelClick = (id: number) => {
+    setReservationToCancel(id);
+    setConfirmDialogOpen(true);
+  };
+
+  const onCancelConfirm = async () => {
+    if (!reservationToCancel) return;
+    
+    setCancelingId(reservationToCancel);
     try {
-      await cancelReservation(id);
+      await cancelReservation(reservationToCancel);
       toast.success("Reserva cancelada correctamente");
       await load();
+      setConfirmDialogOpen(false);
+      setReservationToCancel(null);
     } catch (e: any) {
       toast.error(
         e?.response?.data?.message ?? "No fue posible cancelar la reserva"
@@ -219,7 +230,7 @@ export default function MyReservationsPage() {
                     <Button
                       variant="danger"
                       disabled={cancelingId === r.id}
-                      onClick={() => onCancel(r.id)}
+                      onClick={() => onCancelClick(r.id)}
                     >
                       {cancelingId === r.id ? "Cancelando..." : "Cancelar"}
                     </Button>
@@ -232,6 +243,22 @@ export default function MyReservationsPage() {
       </Table>
         </motion.div>
       </div>
+
+      {/* Dialog de confirmación */}
+      <ConfirmDialog
+        isOpen={confirmDialogOpen}
+        onClose={() => {
+          setConfirmDialogOpen(false);
+          setReservationToCancel(null);
+        }}
+        onConfirm={onCancelConfirm}
+        title="Cancelar Reserva"
+        message="¿Estás seguro que deseas cancelar esta reserva? Esta acción no se puede deshacer."
+        confirmText="Sí, cancelar"
+        cancelText="No, mantener"
+        type="danger"
+        isLoading={cancelingId !== null}
+      />
     </div>
   );
 }
