@@ -3,11 +3,27 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaTicketAlt } from "react-icons/fa";
 import { LABELS, MESSAGES, ROUTES } from "@/constants";
+import { confirmPayment } from "@/services/reservationService";
+import toast from "react-hot-toast";
 
 export default function PaymentSuccessPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Confirmar el pago en el backend
+    const flightIdStr = localStorage.getItem("pendingPaymentFlightId");
+    if (flightIdStr) {
+      const flightId = parseInt(flightIdStr, 10);
+      confirmPayment(flightId)
+        .then(() => {
+          localStorage.removeItem("pendingPaymentFlightId");
+        })
+        .catch((e) => {
+          console.error("Error confirming payment:", e);
+          toast.error("No se pudo confirmar el pago, pero tu reserva está activa");
+        });
+    }
+
     window.history.pushState(null, "", window.location.href);
     
     const handlePopState = () => {

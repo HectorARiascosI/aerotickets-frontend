@@ -79,6 +79,7 @@ export default function MyReservationsPage() {
 
   const canPay = (r: Row) => {
     if (r.status !== "ACTIVE") return false;
+    if (r.paid) return false; // Ya está pagado
     if (!r.departureAt) return false;
     const dep = new Date(r.departureAt);
     return dep.getTime() > Date.now();
@@ -94,6 +95,8 @@ export default function MyReservationsPage() {
     try {
       const session = await createCheckoutSession(r.flightId as number);
       if (session.url) {
+        // Guardar el flightId para marcarlo como pagado después
+        localStorage.setItem("pendingPaymentFlightId", r.flightId.toString());
         window.location.href = session.url;
       } else {
         toast.error("Stripe no devolvió una URL de pago");
@@ -201,19 +204,26 @@ export default function MyReservationsPage() {
               </TD>
 
               <TD className="text-center">
-                <Badge color={r.status === "ACTIVE" ? "green" : "red"}>
-                  {r.status === "ACTIVE" ? (
-                    <>
-                      <FaCheckCircle className="inline mr-1" />
-                      <span>Activa</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaTimesCircle className="inline mr-1" />
-                      <span>Cancelada</span>
-                    </>
+                <div className="flex flex-col gap-1 items-center">
+                  <Badge color={r.status === "ACTIVE" ? "green" : "red"}>
+                    {r.status === "ACTIVE" ? (
+                      <>
+                        <FaCheckCircle className="inline mr-1" />
+                        <span>Activa</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaTimesCircle className="inline mr-1" />
+                        <span>Cancelada</span>
+                      </>
+                    )}
+                  </Badge>
+                  {r.paid && (
+                    <Badge color="blue">
+                      <span className="text-xs">✓ Pagado</span>
+                    </Badge>
                   )}
-                </Badge>
+                </div>
               </TD>
 
               <TD className="text-right space-x-2">

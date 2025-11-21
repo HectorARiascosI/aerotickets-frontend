@@ -88,6 +88,8 @@ function FlightCard({ flight }: Props) {
 
       const session = await createCheckoutSession(flightId);
       if (session.url) {
+        // Guardar el flightId para marcarlo como pagado después
+        localStorage.setItem("pendingPaymentFlightId", flightId.toString());
         window.location.href = session.url;
       } else {
         toast.error("Stripe no devolvió una URL de pago.");

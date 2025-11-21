@@ -13,6 +13,8 @@ export interface CreateReservationPayload {
 export type Reservation = {
   id: number;
   status?: "ACTIVE" | "CANCELLED" | string;
+  paid?: boolean;
+  paidAt?: string;
   createdAt?: string;
 
   flightId?: number;
@@ -75,4 +77,10 @@ export async function hasUserReservedFlight(flightId: number): Promise<boolean> 
     console.error("Error checking if user has reserved flight:", e);
     return false;
   }
+}
+
+export async function confirmPayment(flightId: number): Promise<void> {
+  await api.post("/api/payments/confirm", { flightId }, {
+    withCredentials: true,
+  });
 }
