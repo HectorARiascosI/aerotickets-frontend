@@ -18,6 +18,7 @@ export type Reservation = {
   createdAt?: string;
 
   flightId?: number;
+  flightNumber?: string;
   airline?: string;
   origin?: string;
   destination?: string;

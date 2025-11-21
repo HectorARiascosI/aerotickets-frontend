@@ -13,7 +13,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
-import { FaCheckCircle, FaTimesCircle, FaTicketAlt, FaPlane } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaTicketAlt, FaPlane, FaTrash } from "react-icons/fa";
 
 type Row = Reservation;
 
@@ -24,6 +24,8 @@ export default function MyReservationsPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [reservationToCancel, setReservationToCancel] = useState<number | null>(null);
+  const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
+  const [clearingHistory, setClearingHistory] = useState(false);
 
   const ordered = useMemo(
     () =>
@@ -34,6 +36,18 @@ export default function MyReservationsPage() {
       }),
     [rows]
   );
+
+  // Filtrar reservas pasadas o canceladas
+  const oldReservations = useMemo(() => {
+    return ordered.filter(r => {
+      if (r.status === "CANCELLED") return true;
+      if (!r.departureAt) return false;
+      const dep = new Date(r.departureAt);
+      return dep.getTime() < Date.now();
+    });
+  }, [ordered]);
+
+  const hasOldReservations = oldReservations.length > 0;
 
   const load = async () => {
     setLoading(true);
@@ -74,6 +88,28 @@ export default function MyReservationsPage() {
       );
     } finally {
       setCancelingId(null);
+    }
+  };
+
+  const onClearHistoryConfirm = async () => {
+    setClearingHistory(true);
+    try {
+      // Cancelar todas las reservas pasadas o canceladas
+      const promises = oldReservations.map(r => {
+        if (r.status === "ACTIVE") {
+          return cancelReservation(r.id);
+        }
+        return Promise.resolve();
+      });
+      
+      await Promise.all(promises);
+      toast.success(`Se limpiaron ${oldReservations.length} reserva(s) del historial`);
+      await load();
+      setShowClearHistoryDialog(false);
+    } catch (e: any) {
+      toast.error("No fue posible limpiar el historial");
+    } finally {
+      setClearingHistory(false);
     }
   };
 
@@ -145,13 +181,27 @@ export default function MyReservationsPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex items-center justify-between"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold gradient-text mb-2 flex items-center gap-3">
-            <FaTicketAlt />
-            Mis reservas
-          </h1>
-          <p className="text-gray-600">Gestiona tus vuelos reservados</p>
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold gradient-text mb-2 flex items-center gap-3">
+              <FaTicketAlt />
+              Mis reservas
+            </h1>
+            <p className="text-gray-600">Gestiona tus vuelos reservados</p>
+          </div>
+          
+          {hasOldReservations && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowClearHistoryDialog(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              <FaTrash />
+              <span className="hidden sm:inline">Limpiar historial</span>
+            </motion.button>
+          )}
         </motion.div>
 
         <motion.div
@@ -183,6 +233,11 @@ export default function MyReservationsPage() {
                   {r.origin} → {r.destination}
                 </div>
                 <div className="text-xs text-gray-500">{r.airline}</div>
+                {r.flightNumber && (
+                  <div className="text-xs font-medium text-blue-600">
+                    Vuelo: {r.flightNumber}
+                  </div>
+                )}
                 {r.seatNumber && (
                   <div className="text-xs text-gray-500">
                     Asiento: {r.seatNumber}
@@ -254,7 +309,7 @@ export default function MyReservationsPage() {
         </motion.div>
       </div>
 
-      {/* Dialog de confirmación */}
+      {/* Dialog de confirmación para cancelar */}
       <ConfirmDialog
         isOpen={confirmDialogOpen}
         onClose={() => {
@@ -268,6 +323,19 @@ export default function MyReservationsPage() {
         cancelText="No, mantener"
         type="danger"
         isLoading={cancelingId !== null}
+      />
+
+      {/* Dialog para limpiar historial */}
+      <ConfirmDialog
+        isOpen={showClearHistoryDialog}
+        onClose={() => setShowClearHistoryDialog(false)}
+        onConfirm={onClearHistoryConfirm}
+        title="Limpiar Historial"
+        message={`Se eliminarán ${oldReservations.length} reserva(s) pasada(s) o cancelada(s). ¿Deseas continuar?`}
+        confirmText="Sí, limpiar"
+        cancelText="Cancelar"
+        type="danger"
+        isLoading={clearingHistory}
       />
     </div>
   );
