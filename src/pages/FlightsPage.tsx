@@ -1,25 +1,57 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { searchFlights, Flight, autocompleteAirports } from "../services/flightService";
+import { useEffect, useState } from "react";
+import { searchFlights, Flight } from "../services/flightService";
 import { FlightStream } from "../services/flightStream";
 import FlightCard from "../components/FlightCard";
 import FlightRouteMap from "../components/FlightRouteMap";
+import AirportSelector from "../components/AirportSelector";
+import DateSelector from "../components/DateSelector";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
-import { FaPlane, FaSearch, FaCalendarAlt, FaMap } from "react-icons/fa";
+import { FaPlane, FaSearch, FaMap } from "react-icons/fa";
 
-type AirportOption = { iata: string; city: string; label: string };
+// Claves para localStorage
+const STORAGE_KEYS = {
+  ORIGIN: 'flights_search_origin',
+  DESTINATION: 'flights_search_destination',
+  DATE: 'flights_search_date',
+  FLIGHTS: 'flights_search_results',
+};
 
 export default function FlightsPage() {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [flights, setFlights] = useState<Flight[]>([]);
+  // Recuperar estado del localStorage
+  const [origin, setOrigin] = useState(() => localStorage.getItem(STORAGE_KEYS.ORIGIN) || "");
+  const [destination, setDestination] = useState(() => localStorage.getItem(STORAGE_KEYS.DESTINATION) || "");
+  const [date, setDate] = useState(() => {
+    const savedDate = localStorage.getItem(STORAGE_KEYS.DATE);
+    const today = new Date().toISOString().split("T")[0];
+    // Si la fecha guardada es anterior a hoy, usar hoy
+    if (savedDate && savedDate >= today) {
+      return savedDate;
+    }
+    return today;
+  });
+  const [flights, setFlights] = useState<Flight[]>(() => {
+    const savedFlights = localStorage.getItem(STORAGE_KEYS.FLIGHTS);
+    return savedFlights ? JSON.parse(savedFlights) : [];
+  });
   const [loading, setLoading] = useState(false);
 
-  const [origOptions, setOrigOptions] = useState<AirportOption[]>([]);
-  const [destOptions, setDestOptions] = useState<AirportOption[]>([]);
-  const [showOrig, setShowOrig] = useState(false);
-  const [showDest, setShowDest] = useState(false);
+  // Guardar en localStorage cuando cambien los valores
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.ORIGIN, origin);
+  }, [origin]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.DESTINATION, destination);
+  }, [destination]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.DATE, date);
+  }, [date]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.FLIGHTS, JSON.stringify(flights));
+  }, [flights]);
 
   useEffect(() => {
     const stream = new FlightStream();
@@ -62,22 +94,7 @@ export default function FlightsPage() {
     }
   }
 
-  const debounce = (fn: (...args: any[]) => void, ms = 250) => {
-    let timer: any;
-    return (...args: any[]) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), ms);
-    };
-  };
 
-  const loadOrig = useMemo(
-    () => debounce(async (q: string) => setOrigOptions(await autocompleteAirports(q))),
-    []
-  );
-  const loadDest = useMemo(
-    () => debounce(async (q: string) => setDestOptions(await autocompleteAirports(q))),
-    []
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -113,102 +130,29 @@ export default function FlightsPage() {
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Origen */}
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FaPlane className="inline mr-2 text-primary-500" />
-                Origen
-              </label>
-              <input
-                type="text"
-                placeholder="Ej: Bogotá o BOG"
-                value={origin}
-                onChange={(e) => {
-                  setOrigin(e.target.value);
-                  setShowOrig(true);
-                  loadOrig(e.target.value);
-                }}
-                onFocus={() => setShowOrig(true)}
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-              />
-              {showOrig && origOptions.length > 0 && (
-                <motion.ul
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute bg-white border-2 border-primary-200 rounded-xl w-full mt-2 shadow-lg max-h-52 overflow-auto z-20"
-                  onMouseLeave={() => setShowOrig(false)}
-                >
-                  {origOptions.map((o) => (
-                    <li
-                      key={o.iata}
-                      className="px-4 py-3 text-sm hover:bg-primary-50 cursor-pointer transition-colors border-b last:border-b-0"
-                      onClick={() => {
-                        setOrigin(o.iata);
-                        setShowOrig(false);
-                      }}
-                    >
-                      <span className="font-semibold text-primary-600">{o.iata}</span>
-                      <span className="text-gray-600"> - {o.city}</span>
-                    </li>
-                  ))}
-                </motion.ul>
-              )}
-            </div>
+            <AirportSelector
+              value={origin}
+              onChange={setOrigin}
+              placeholder="Ej: Bogotá o BOG"
+              label="Origen"
+              icon={<FaPlane className="inline mr-2 text-primary-500" />}
+            />
 
             {/* Destino */}
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FaPlane className="inline mr-2 text-accent-500 rotate-90" />
-                Destino
-              </label>
-              <input
-                type="text"
-                placeholder="Ej: Medellín o MDE"
-                value={destination}
-                onChange={(e) => {
-                  setDestination(e.target.value);
-                  setShowDest(true);
-                  loadDest(e.target.value);
-                }}
-                onFocus={() => setShowDest(true)}
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all"
-              />
-              {showDest && destOptions.length > 0 && (
-                <motion.ul
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute bg-white border-2 border-accent-200 rounded-xl w-full mt-2 shadow-lg max-h-52 overflow-auto z-20"
-                  onMouseLeave={() => setShowDest(false)}
-                >
-                  {destOptions.map((o) => (
-                    <li
-                      key={o.iata}
-                      className="px-4 py-3 text-sm hover:bg-accent-50 cursor-pointer transition-colors border-b last:border-b-0"
-                      onClick={() => {
-                        setDestination(o.iata);
-                        setShowDest(false);
-                      }}
-                    >
-                      <span className="font-semibold text-accent-600">{o.iata}</span>
-                      <span className="text-gray-600"> - {o.city}</span>
-                    </li>
-                  ))}
-                </motion.ul>
-              )}
-            </div>
+            <AirportSelector
+              value={destination}
+              onChange={setDestination}
+              placeholder="Ej: Medellín o MDE"
+              label="Destino"
+              icon={<FaPlane className="inline mr-2 text-accent-500 rotate-90" />}
+            />
 
             {/* Fecha */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FaCalendarAlt className="inline mr-2 text-success" />
-                Fecha de viaje
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-success focus:border-transparent transition-all"
-              />
-            </div>
+            <DateSelector
+              value={date}
+              onChange={setDate}
+              label="Fecha de viaje"
+            />
 
             {/* Botón de búsqueda */}
             <div className="flex items-end">
