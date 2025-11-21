@@ -13,18 +13,14 @@ import { FaPlane, FaEnvelope, FaLock } from 'react-icons/fa'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  email: z.preprocess(
-    (val) => typeof val === 'string' ? val.trim() : val,
-    z.string()
-      .min(1, 'El email es requerido')
-      .email(MESSAGES.AUTH.INVALID_EMAIL)
-  ),
-  password: z.preprocess(
-    (val) => typeof val === 'string' ? val.trim() : val,
-    z.string()
-      .min(1, 'La contraseña es requerida')
-      .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
-  )
+  email: z.string()
+    .min(1, 'El email es requerido')
+    .refine(val => val.trim().length > 0, 'El email no puede estar vacío')
+    .refine(val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()), MESSAGES.AUTH.INVALID_EMAIL),
+  password: z.string()
+    .min(1, 'La contraseña es requerida')
+    .refine(val => val.trim().length > 0, 'La contraseña no puede estar vacía')
+    .refine(val => val.trim().length >= 4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -43,7 +39,8 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await login(data.email, data.password)
+      // Limpiar espacios antes de enviar
+      await login(data.email.trim(), data.password.trim())
       navigate(from, { replace: true })
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? MESSAGES.AUTH.LOGIN_ERROR)

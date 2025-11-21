@@ -11,24 +11,18 @@ import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  username: z.preprocess(
-    (val) => typeof val === 'string' ? val.trim() : val,
-    z.string()
-      .min(1, 'El nombre es requerido')
-      .min(2, MESSAGES.AUTH.MIN_USERNAME_LENGTH)
-  ),
-  email: z.preprocess(
-    (val) => typeof val === 'string' ? val.trim() : val,
-    z.string()
-      .min(1, 'El email es requerido')
-      .email(MESSAGES.AUTH.INVALID_EMAIL)
-  ),
-  password: z.preprocess(
-    (val) => typeof val === 'string' ? val.trim() : val,
-    z.string()
-      .min(1, 'La contraseña es requerida')
-      .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
-  )
+  username: z.string()
+    .min(1, 'El nombre es requerido')
+    .refine(val => val.trim().length > 0, 'El nombre no puede estar vacío')
+    .refine(val => val.trim().length >= 2, MESSAGES.AUTH.MIN_USERNAME_LENGTH),
+  email: z.string()
+    .min(1, 'El email es requerido')
+    .refine(val => val.trim().length > 0, 'El email no puede estar vacío')
+    .refine(val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()), MESSAGES.AUTH.INVALID_EMAIL),
+  password: z.string()
+    .min(1, 'La contraseña es requerida')
+    .refine(val => val.trim().length > 0, 'La contraseña no puede estar vacía')
+    .refine(val => val.trim().length >= 4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -45,7 +39,13 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await registerUser(data)
+      // Limpiar espacios antes de enviar
+      const cleanData = {
+        username: data.username.trim(),
+        email: data.email.trim(),
+        password: data.password.trim()
+      }
+      await registerUser(cleanData)
       toast.success(MESSAGES.AUTH.REGISTER_SUCCESS)
       navigate(ROUTES.LOGIN, { replace: true })
     } catch (e: any) {

@@ -12,12 +12,10 @@ import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({ 
-  email: z.preprocess(
-    (val) => typeof val === 'string' ? val.trim() : val,
-    z.string()
-      .min(1, 'El email es requerido')
-      .email(MESSAGES.AUTH.INVALID_EMAIL)
-  )
+  email: z.string()
+    .min(1, 'El email es requerido')
+    .refine(val => val.trim().length > 0, 'El email no puede estar vacío')
+    .refine(val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()), MESSAGES.AUTH.INVALID_EMAIL)
 })
 type FormData = z.infer<typeof schema>
 
@@ -34,7 +32,8 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await requestReset(data.email)
+      // Limpiar espacios antes de enviar
+      await requestReset(data.email.trim())
       toast.success(MESSAGES.AUTH.PASSWORD_RESET_SENT)
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? MESSAGES.AUTH.PASSWORD_RESET_ERROR)

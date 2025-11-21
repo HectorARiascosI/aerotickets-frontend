@@ -12,12 +12,10 @@ import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({ 
-  password: z.preprocess(
-    (val) => typeof val === 'string' ? val.trim() : val,
-    z.string()
-      .min(1, 'La contraseña es requerida')
-      .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
-  )
+  password: z.string()
+    .min(1, 'La contraseña es requerida')
+    .refine(val => val.trim().length > 0, 'La contraseña no puede estar vacía')
+    .refine(val => val.trim().length >= 4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -35,7 +33,8 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await resetPassword(token!, data.password)
+      // Limpiar espacios antes de enviar
+      await resetPassword(token!, data.password.trim())
       toast.success(MESSAGES.AUTH.PASSWORD_RESET_SENT)
       navigate(ROUTES.LOGIN, { replace: true })
     } catch (e: any) {
