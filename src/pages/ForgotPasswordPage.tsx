@@ -1,9 +1,12 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Card from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import { useAuth } from '@/auth/AuthContext'
 import { requestReset } from '@/services/authService'
 import toast from 'react-hot-toast'
 
@@ -12,6 +15,15 @@ type FormData = z.infer<typeof schema>
 
 export default function ForgotPasswordPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  // Si el usuario ya está autenticado, redirigir a flights
+  useEffect(() => {
+    if (user) {
+      navigate('/flights', { replace: true })
+    }
+  }, [user, navigate])
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -20,6 +32,11 @@ export default function ForgotPasswordPage() {
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'No fue posible procesar la solicitud')
     }
+  }
+
+  // No renderizar el formulario si el usuario ya está autenticado
+  if (user) {
+    return null
   }
 
   return (
