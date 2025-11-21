@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/auth/ProtectedRoute";
 import { Suspense, lazy } from "react";
 
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/RegisterPage"));
 const FlightsPage = lazy(() => import("@/pages/FlightsPage"));
@@ -16,7 +17,7 @@ export default function AppRoutes() {
       <Navbar />
       <Suspense fallback={<div className="p-6">Cargando…</div>}>
         <Routes>
-          <Route path="/" element={<Navigate to="/flights" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
