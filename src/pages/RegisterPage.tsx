@@ -11,9 +11,15 @@ import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  username: z.string().min(2, MESSAGES.AUTH.MIN_USERNAME_LENGTH),
-  email: z.string().min(1, 'El email es requerido').email(MESSAGES.AUTH.INVALID_EMAIL),
-  password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  username: z.string()
+    .min(1, 'El nombre es requerido')
+    .min(2, MESSAGES.AUTH.MIN_USERNAME_LENGTH),
+  email: z.string()
+    .min(1, 'El email es requerido')
+    .email(MESSAGES.AUTH.INVALID_EMAIL),
+  password: z.string()
+    .min(1, 'La contraseña es requerida')
+    .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -29,38 +35,8 @@ export default function RegisterPage() {
   }, [user, navigate])
 
   const onSubmit = async (data: FormData) => {
-    // Validar espacios en blanco manualmente
-    const username = data.username.trim()
-    const email = data.email.trim()
-    const password = data.password.trim()
-    
-    if (!username) {
-      toast.error('El nombre no puede estar vacío')
-      return
-    }
-    
-    if (username.length < 2) {
-      toast.error(MESSAGES.AUTH.MIN_USERNAME_LENGTH)
-      return
-    }
-    
-    if (!email) {
-      toast.error('El email no puede estar vacío')
-      return
-    }
-    
-    if (!password) {
-      toast.error('La contraseña no puede estar vacía')
-      return
-    }
-    
-    if (password.length < 4) {
-      toast.error(MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
-      return
-    }
-    
     try {
-      await registerUser({ username, email, password })
+      await registerUser(data)
       toast.success(MESSAGES.AUTH.REGISTER_SUCCESS)
       navigate(ROUTES.LOGIN, { replace: true })
     } catch (e: any) {
@@ -77,9 +53,29 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <h1 className="text-2xl font-bold mb-4 gradient-text">{LABELS.AUTH.REGISTER_TITLE}</h1>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input label={LABELS.AUTH.USERNAME} {...registerField('username')} error={errors.username?.message} />
-          <Input label={LABELS.AUTH.EMAIL} type="email" {...registerField('email')} error={errors.email?.message} />
-          <Input label={LABELS.AUTH.PASSWORD} type="password" {...registerField('password')} error={errors.password?.message} />
+          <Input 
+            label={LABELS.AUTH.USERNAME} 
+            {...registerField('username', {
+              setValueAs: (value) => value?.trim() || ''
+            })} 
+            error={errors.username?.message} 
+          />
+          <Input 
+            label={LABELS.AUTH.EMAIL} 
+            type="email" 
+            {...registerField('email', {
+              setValueAs: (value) => value?.trim() || ''
+            })} 
+            error={errors.email?.message} 
+          />
+          <Input 
+            label={LABELS.AUTH.PASSWORD} 
+            type="password" 
+            {...registerField('password', {
+              setValueAs: (value) => value?.trim() || ''
+            })} 
+            error={errors.password?.message} 
+          />
           <Button 
             type="submit" 
             loading={isSubmitting} 

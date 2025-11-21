@@ -13,8 +13,12 @@ import { FaPlane, FaEnvelope, FaLock } from 'react-icons/fa'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  email: z.string().min(1, 'El email es requerido').email(MESSAGES.AUTH.INVALID_EMAIL),
-  password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  email: z.string()
+    .min(1, 'El email es requerido')
+    .email(MESSAGES.AUTH.INVALID_EMAIL),
+  password: z.string()
+    .min(1, 'La contraseña es requerida')
+    .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -32,27 +36,8 @@ export default function LoginPage() {
   }, [user, navigate])
 
   const onSubmit = async (data: FormData) => {
-    // Validar espacios en blanco manualmente
-    const email = data.email.trim()
-    const password = data.password.trim()
-    
-    if (!email) {
-      toast.error('El email no puede estar vacío')
-      return
-    }
-    
-    if (!password) {
-      toast.error('La contraseña no puede estar vacía')
-      return
-    }
-    
-    if (password.length < 4) {
-      toast.error(MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
-      return
-    }
-    
     try {
-      await login(email, password)
+      await login(data.email, data.password)
       navigate(from, { replace: true })
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? MESSAGES.AUTH.LOGIN_ERROR)
@@ -95,7 +80,9 @@ export default function LoginPage() {
               <Input 
                 label={LABELS.AUTH.EMAIL}
                 type="email" 
-                {...register('email')} 
+                {...register('email', {
+                  setValueAs: (value) => value?.trim() || ''
+                })} 
                 error={errors.email?.message}
                 className="pl-10"
               />
@@ -106,7 +93,9 @@ export default function LoginPage() {
               <Input 
                 label={LABELS.AUTH.PASSWORD}
                 type="password" 
-                {...register('password')} 
+                {...register('password', {
+                  setValueAs: (value) => value?.trim() || ''
+                })} 
                 error={errors.password?.message}
                 className="pl-10"
               />
