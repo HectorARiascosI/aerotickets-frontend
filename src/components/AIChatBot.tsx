@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaRobot, FaTimes, FaPaperPlane, FaUser, FaSearch } from 'react-icons/fa'
+import { FaRobot, FaTimes, FaPaperPlane, FaUser } from 'react-icons/fa'
 import { sendChatMessage, ChatMessage, generateMessageId } from '@/services/aiChatService'
 import toast from 'react-hot-toast'
 
@@ -11,7 +11,7 @@ export default function AIChatBot() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: generateMessageId(),
-      message: '¡Hola! Soy AeroBot, tu asistente de vuelos ✈️\n\n¿En qué puedo ayudarte hoy?\n\nPuedes preguntarme cosas como:\n• "Quiero volar de Bogotá a Medellín mañana"\n• "Muéstrame mis reservas"\n• "¿Qué aeropuertos están disponibles?"',
+      message: '¡Hola! Soy AeroBot, tu asistente de vuelos ✈️\n\n¿En qué puedo ayudarte hoy?\n\nPuedes preguntarme sobre:\n• Búsqueda de vuelos\n• Tus reservas\n• Aeropuertos disponibles\n• Cómo usar la plataforma',
       isUser: false,
       timestamp: new Date()
     }
@@ -63,33 +63,15 @@ export default function AIChatBot() {
 
       setMessages(prev => [...prev, botMessage])
 
-      // Si hay una acción específica, ejecutarla
-      if (response.action === 'search' && response.data) {
-        const flights = Array.isArray(response.data) ? response.data : []
-        if (flights.length > 0) {
-          toast.success(`¡Encontré ${flights.length} vuelo(s) disponible(s)!`)
-          // Agregar botón para ver resultados
-          setTimeout(() => {
-            const searchButton: ChatMessage = {
-              id: generateMessageId(),
-              message: 'Ver resultados de búsqueda',
-              isUser: false,
-              timestamp: new Date(),
-              action: 'search_button',
-              data: response.data
-            }
-            setMessages(prev => [...prev, searchButton])
-          }, 1000)
-        }
-      } else if (response.action === 'reservations') {
-        // Navegar a mis reservas
+      // Ejecutar acciones específicas
+      if (response.action === 'reservations') {
         setTimeout(() => {
-          navigate('/mis-reservas')
+          navigate('/reservations')
           setIsOpen(false)
         }, 1500)
       }
 
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage: ChatMessage = {
         id: generateMessageId(),
         message: 'Lo siento, tuve un problema procesando tu solicitud. ¿Podrías intentar de nuevo?',
@@ -121,7 +103,6 @@ export default function AIChatBot() {
 
   return (
     <>
-      {/* Botón flotante */}
       <motion.button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-50 bg-gradient-hero text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
@@ -141,7 +122,6 @@ export default function AIChatBot() {
         <FaRobot className="text-2xl" />
       </motion.button>
 
-      {/* Modal de chat */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -150,7 +130,6 @@ export default function AIChatBot() {
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             className="fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
           >
-            {/* Header */}
             <div className="bg-gradient-hero text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-full">
@@ -158,7 +137,7 @@ export default function AIChatBot() {
                 </div>
                 <div>
                   <h3 className="font-semibold">AeroBot</h3>
-                  <p className="text-xs opacity-90">Asistente de vuelos</p>
+                  <p className="text-xs opacity-90">Asistente con IA</p>
                 </div>
               </div>
               <button
@@ -169,7 +148,6 @@ export default function AIChatBot() {
               </button>
             </div>
 
-            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <div
@@ -186,29 +164,12 @@ export default function AIChatBot() {
                     className={`max-w-[80%] p-3 rounded-2xl ${
                       message.isUser
                         ? 'bg-blue-500 text-white rounded-br-md'
-                        : message.action === 'search_button'
-                        ? 'bg-gradient-hero text-white rounded-bl-md cursor-pointer hover:opacity-90'
                         : 'bg-gray-100 text-gray-800 rounded-bl-md'
                     }`}
-                    onClick={() => {
-                      if (message.action === 'search_button' && message.data) {
-                        // Navegar a búsqueda con resultados
-                        navigate('/vuelos')
-                        setIsOpen(false)
-                        toast.success('Mostrando resultados de búsqueda')
-                      }
-                    }}
                   >
-                    {message.action === 'search_button' ? (
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <FaSearch />
-                        {message.message}
-                      </div>
-                    ) : (
-                      <div className="text-sm whitespace-pre-wrap">
-                        {formatMessage(message.message)}
-                      </div>
-                    )}
+                    <div className="text-sm whitespace-pre-wrap">
+                      {formatMessage(message.message)}
+                    </div>
                     <div className="text-xs opacity-70 mt-1">
                       {message.timestamp.toLocaleTimeString([], { 
                         hour: '2-digit', 
@@ -243,7 +204,6 @@ export default function AIChatBot() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
             <div className="p-4 border-t border-gray-200">
               <div className="flex gap-2">
                 <input

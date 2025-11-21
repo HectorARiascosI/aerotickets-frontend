@@ -49,7 +49,6 @@ export default function AppRoutes() {
           <Route path="*" element={<div className="p-6">404 — Página no encontrada</div>} />
         </Routes>
       </Suspense>
-      {/* Solo mostrar chatbot si el usuario está autenticado */}
       {user && <AIChatBot />}
     </>
   );
