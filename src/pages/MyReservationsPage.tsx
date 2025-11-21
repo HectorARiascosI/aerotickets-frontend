@@ -180,7 +180,7 @@ export default function MyReservationsPage() {
                   {r.origin} → {r.destination}
                 </div>
                 <div className="text-xs text-gray-500">{r.airline}</div>
-                {typeof r.seatNumber === "number" && (
+                {r.seatNumber && (
                   <div className="text-xs text-gray-500">
                     Asiento: {r.seatNumber}
                   </div>

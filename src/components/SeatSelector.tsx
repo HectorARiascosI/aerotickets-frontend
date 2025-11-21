@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { FaChair, FaTimes } from "react-icons/fa";
 
@@ -12,27 +12,27 @@ interface Seat {
 }
 
 interface SeatSelectorProps {
-  onSelectSeat: (seatNumber: number | null) => void;
-  selectedSeat: number | null;
+  onSelectSeat: (seatId: string | null) => void;
+  selectedSeat: string | null;
+  occupiedSeats?: string[];
 }
 
-export default function SeatSelector({ onSelectSeat, selectedSeat }: SeatSelectorProps) {
+export default function SeatSelector({ onSelectSeat, selectedSeat, occupiedSeats = [] }: SeatSelectorProps) {
   const rows = 20; // 20 filas
   const columns = ["A", "B", "C", "", "D", "E", "F"]; // Pasillo en el medio
   
-  // Generar asientos (algunos ocupados aleatoriamente)
-  const [seats] = useState<Seat[]>(() => {
+  // Generar asientos
+  const seats: Seat[] = (() => {
     const allSeats: Seat[] = [];
     for (let row = 1; row <= rows; row++) {
-      columns.forEach((col, colIndex) => {
+      columns.forEach((col) => {
         if (col === "") return; // Pasillo
         
-        const seatNumber = row * 10 + colIndex;
-        // Simular algunos asientos ocupados (20% de probabilidad)
-        const isOccupied = Math.random() < 0.2;
+        const seatId = `${row}${col}`;
+        const isOccupied = occupiedSeats.includes(seatId);
         
         allSeats.push({
-          id: `${row}${col}`,
+          id: seatId,
           row,
           column: col,
           status: isOccupied ? "occupied" : "available",
@@ -40,27 +40,23 @@ export default function SeatSelector({ onSelectSeat, selectedSeat }: SeatSelecto
       });
     }
     return allSeats;
-  });
+  })();
 
   const handleSeatClick = (seat: Seat) => {
     if (seat.status === "occupied") return;
     
-    const seatNumber = parseInt(seat.id.replace(/[A-Z]/g, ""));
-    
-    if (selectedSeat === seatNumber) {
+    if (selectedSeat === seat.id) {
       onSelectSeat(null);
     } else {
-      onSelectSeat(seatNumber);
+      onSelectSeat(seat.id);
     }
   };
 
   const getSeatColor = (seat: Seat) => {
-    const seatNumber = parseInt(seat.id.replace(/[A-Z]/g, ""));
-    
     if (seat.status === "occupied") {
       return "bg-gray-300 cursor-not-allowed";
     }
-    if (selectedSeat === seatNumber) {
+    if (selectedSeat === seat.id) {
       return "bg-gradient-hero text-white shadow-glow";
     }
     return "bg-green-100 hover:bg-green-200 cursor-pointer border-2 border-green-300";
@@ -170,7 +166,7 @@ export default function SeatSelector({ onSelectSeat, selectedSeat }: SeatSelecto
           <div className="inline-block bg-primary-50 border-2 border-primary-300 rounded-lg px-6 py-3">
             <p className="text-sm text-gray-600 mb-1">Asiento seleccionado:</p>
             <p className="text-2xl font-bold gradient-text">
-              {seats.find((s) => parseInt(s.id.replace(/[A-Z]/g, "")) === selectedSeat)?.id || selectedSeat}
+              {selectedSeat}
             </p>
           </div>
         </motion.div>

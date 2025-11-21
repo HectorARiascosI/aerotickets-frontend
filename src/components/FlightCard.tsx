@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flight, upsertFlightForReservation } from "@/services/flightService";
-import { createReservation } from "@/services/reservationService";
+import { createReservation, getOccupiedSeats } from "@/services/reservationService";
 import { createCheckoutSession } from "@/services/paymentService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
@@ -14,8 +14,23 @@ type Props = { flight: Flight };
 
 function FlightCard({ flight }: Props) {
   const [open, setOpen] = useState(false);
-  const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
+  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [occupiedSeats, setOccupiedSeats] = useState<string[]>([]);
+  const [loadingSeats, setLoadingSeats] = useState(false);
+
+  useEffect(() => {
+    if (open && (flight as any).id) {
+      setLoadingSeats(true);
+      getOccupiedSeats((flight as any).id)
+        .then(setOccupiedSeats)
+        .catch((e) => {
+          console.error("Error loading occupied seats:", e);
+          toast.error("No se pudieron cargar los asientos ocupados");
+        })
+        .finally(() => setLoadingSeats(false));
+    }
+  }, [open, flight]);
 
   const airline = flight.airline || "Desconocida";
   const flightNumber = flight.flightNumber || "—";
@@ -216,10 +231,17 @@ function FlightCard({ flight }: Props) {
               <FaChair className="text-primary-500" />
               Selecciona tu asiento
             </h3>
-            <SeatSelector
-              selectedSeat={selectedSeat}
-              onSelectSeat={setSelectedSeat}
-            />
+            {loadingSeats ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Cargando asientos disponibles...</p>
+              </div>
+            ) : (
+              <SeatSelector
+                selectedSeat={selectedSeat}
+                onSelectSeat={setSelectedSeat}
+                occupiedSeats={occupiedSeats}
+              />
+            )}
           </div>
 
           {/* Información de la aeronave */}

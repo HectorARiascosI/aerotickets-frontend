@@ -6,7 +6,7 @@ const BASE = ENDPOINTS.RESERVATIONS.ROOT;
 
 export interface CreateReservationPayload {
   flightId: number;
-  seatNumber?: number;
+  seatNumber?: string;
   seats?: number;
 }
 
@@ -24,7 +24,7 @@ export type Reservation = {
   arriveAt?: string;
   price?: number | null;
 
-  seatNumber?: number;
+  seatNumber?: string;
 };
 
 export async function createReservation(
@@ -33,7 +33,7 @@ export async function createReservation(
   const body = {
     flightId: payload.flightId,
     seatNumber:
-      typeof payload.seatNumber === "number" ? payload.seatNumber : undefined,
+      payload.seatNumber && payload.seatNumber.trim() !== "" ? payload.seatNumber : undefined,
     seats: Math.max(1, payload.seats ?? 1),
   };
 
@@ -55,4 +55,14 @@ export async function cancelReservation(id: number): Promise<void> {
   await api.delete(`${BASE}/${id}`, {
     withCredentials: true,
   });
+}
+
+export async function getOccupiedSeats(flightId: number): Promise<string[]> {
+  const { data } = await api.get<string[]>(
+    ENDPOINTS.RESERVATIONS.OCCUPIED_SEATS(flightId),
+    {
+      withCredentials: true,
+    }
+  );
+  return Array.isArray(data) ? data : [];
 }

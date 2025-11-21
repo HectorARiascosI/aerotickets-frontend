@@ -27,6 +27,7 @@ export const ENDPOINTS = {
   RESERVATIONS: {
     ROOT: "/api/reservations",
     MY: "/api/reservations/my",
+    OCCUPIED_SEATS: (flightId: number) => `/api/reservations/occupied-seats/${flightId}`,
   },
   PAYMENTS: {
     CHECKOUT_SESSION: "/api/payments/checkout-session",

@@ -11,7 +11,7 @@ export type Flight = {
 
 export type ReservationDTO = {
   id: number;
-  seatNumber?: number;
+  seatNumber?: string;
   status: "ACTIVE" | "CANCELLED";
   createdAt: string;
   flightId: number;
