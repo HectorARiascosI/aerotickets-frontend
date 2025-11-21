@@ -61,13 +61,6 @@ export const LABELS = {
     CANCEL_DIALOG_CANCEL: 'No, mantener',
     VIEW_RESERVATIONS: 'Ver mis reservas',
   },
-  PAYMENT: {
-    TOTAL: 'Total a pagar:',
-    CONFIRM_AND_PAY: 'Confirmar y pagar',
-    CANCEL_BUTTON: 'Cancelar',
-    AUTO_REDIRECT: 'Serás redirigido automáticamente en unos segundos...',
-    TRY_AGAIN: 'Intentar nuevamente',
-  },
   LANDING: {
     HERO_TITLE: 'Tu próxima aventura comienza aquí',
     HERO_SUBTITLE: 'Descubre los mejores vuelos al mejor precio. Reserva fácil, rápido y seguro.',
@@ -110,6 +103,8 @@ export const LABELS = {
     TOTAL: 'Total a pagar:',
     CONFIRM_AND_PAY: 'Confirmar y pagar',
     CANCEL_BUTTON: 'Cancelar',
+    AUTO_REDIRECT: 'Serás redirigido automáticamente en unos segundos...',
+    TRY_AGAIN: 'Intentar nuevamente',
     PROCESSING: 'Procesando...',
     REDIRECTING: 'Redirigiendo...',
     CANCELING: 'Cancelando...',
