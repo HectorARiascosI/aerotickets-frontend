@@ -164,12 +164,29 @@ export default function AIChatBot() {
                     className={`max-w-[80%] p-3 rounded-2xl ${
                       message.isUser
                         ? 'bg-blue-500 text-white rounded-br-md'
+                        : message.action === 'search' || message.action === 'reservations'
+                        ? 'bg-gradient-to-br from-blue-50 to-purple-50 text-gray-800 rounded-bl-md border border-blue-200'
                         : 'bg-gray-100 text-gray-800 rounded-bl-md'
                     }`}
                   >
                     <div className="text-sm whitespace-pre-wrap">
                       {formatMessage(message.message)}
                     </div>
+                    
+                    {message.action === 'search' && message.data && Array.isArray(message.data) && message.data.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <button
+                          onClick={() => {
+                            navigate('/flights')
+                            setIsOpen(false)
+                          }}
+                          className="w-full bg-gradient-hero text-white px-4 py-2 rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          Ver todos los vuelos →
+                        </button>
+                      </div>
+                    )}
+                    
                     <div className="text-xs opacity-70 mt-1">
                       {message.timestamp.toLocaleTimeString([], { 
                         hour: '2-digit', 
