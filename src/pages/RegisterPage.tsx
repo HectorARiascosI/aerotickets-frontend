@@ -11,18 +11,9 @@ import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  username: z.string()
-    .min(1, 'El nombre es requerido')
-    .refine(val => val.trim().length > 0, 'El nombre no puede estar vacío')
-    .refine(val => val.trim().length >= 2, MESSAGES.AUTH.MIN_USERNAME_LENGTH),
-  email: z.string()
-    .min(1, 'El email es requerido')
-    .refine(val => val.trim().length > 0, 'El email no puede estar vacío')
-    .refine(val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()), MESSAGES.AUTH.INVALID_EMAIL),
-  password: z.string()
-    .min(1, 'La contraseña es requerida')
-    .refine(val => val.trim().length > 0, 'La contraseña no puede estar vacía')
-    .refine(val => val.trim().length >= 4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  username: z.string().min(2, MESSAGES.AUTH.MIN_USERNAME_LENGTH),
+  email: z.string().min(1, 'El email es requerido').email(MESSAGES.AUTH.INVALID_EMAIL),
+  password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -38,14 +29,38 @@ export default function RegisterPage() {
   }, [user, navigate])
 
   const onSubmit = async (data: FormData) => {
+    // Validar espacios en blanco manualmente
+    const username = data.username.trim()
+    const email = data.email.trim()
+    const password = data.password.trim()
+    
+    if (!username) {
+      toast.error('El nombre no puede estar vacío')
+      return
+    }
+    
+    if (username.length < 2) {
+      toast.error(MESSAGES.AUTH.MIN_USERNAME_LENGTH)
+      return
+    }
+    
+    if (!email) {
+      toast.error('El email no puede estar vacío')
+      return
+    }
+    
+    if (!password) {
+      toast.error('La contraseña no puede estar vacía')
+      return
+    }
+    
+    if (password.length < 4) {
+      toast.error(MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+      return
+    }
+    
     try {
-      // Limpiar espacios antes de enviar
-      const cleanData = {
-        username: data.username.trim(),
-        email: data.email.trim(),
-        password: data.password.trim()
-      }
-      await registerUser(cleanData)
+      await registerUser({ username, email, password })
       toast.success(MESSAGES.AUTH.REGISTER_SUCCESS)
       navigate(ROUTES.LOGIN, { replace: true })
     } catch (e: any) {
