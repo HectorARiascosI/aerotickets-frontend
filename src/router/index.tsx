@@ -10,6 +10,8 @@ const FlightsPage = lazy(() => import("@/pages/FlightsPage"));
 const MyReservationsPage = lazy(() => import("@/pages/MyReservationsPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const PaymentSuccessPage = lazy(() => import("@/pages/PaymentSuccessPage"));
+const PaymentCancelPage = lazy(() => import("@/pages/PaymentCancelPage"));
 
 export default function AppRoutes() {
   return (
@@ -38,6 +40,8 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route path="/pagos/success" element={<PaymentSuccessPage />} />
+          <Route path="/pagos/cancel" element={<PaymentCancelPage />} />
           <Route path="*" element={<div className="p-6">404 — Página no encontrada</div>} />
         </Routes>
       </Suspense>

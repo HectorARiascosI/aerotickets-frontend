@@ -104,16 +104,57 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -10 }}
-                className="bg-white p-8 rounded-xl shadow-soft hover:shadow-glow transition-all"
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="bg-white p-8 rounded-xl shadow-soft hover:shadow-glow transition-all cursor-pointer"
               >
-                <div className="mb-4">{feature.icon}</div>
+                <motion.div 
+                  className="mb-4"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  {feature.icon}
+                </motion.div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600">{feature.description}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="text-5xl font-bold gradient-text mb-2">500+</div>
+              <p className="text-gray-600 text-lg">Destinos disponibles</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="text-5xl font-bold gradient-text mb-2">10K+</div>
+              <p className="text-gray-600 text-lg">Clientes satisfechos</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="text-5xl font-bold gradient-text mb-2">24/7</div>
+              <p className="text-gray-600 text-lg">Soporte al cliente</p>
+            </motion.div>
           </div>
         </div>
       </section>

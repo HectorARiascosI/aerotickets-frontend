@@ -3,6 +3,8 @@ import { searchFlights, Flight, autocompleteAirports } from "../services/flightS
 import { FlightStream } from "../services/flightStream";
 import FlightCard from "../components/FlightCard";
 import toast from "react-hot-toast";
+import { motion } from "framer-motion";
+import { FaPlane, FaSearch, FaCalendarAlt } from "react-icons/fa";
 
 type AirportOption = { iata: string; city: string; label: string };
 
@@ -77,108 +79,190 @@ export default function FlightsPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold text-gray-800 text-center mb-10">
-        Seguimiento de vuelos en tiempo real
-      </h1>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Origen (ej: Bogotá o BOG)"
-            value={origin}
-            onChange={(e) => {
-              setOrigin(e.target.value);
-              setShowOrig(true);
-              loadOrig(e.target.value);
-            }}
-            onFocus={() => setShowOrig(true)}
-            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-          />
-          {showOrig && origOptions.length > 0 && (
-            <ul
-              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-              onMouseLeave={() => setShowOrig(false)}
-            >
-              {origOptions.map((o) => (
-                <li
-                  key={o.iata}
-                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    setOrigin(o.iata);
-                    setShowOrig(false);
-                  }}
-                >
-                  {o.label}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Destino (ej: Medellín o MDE)"
-            value={destination}
-            onChange={(e) => {
-              setDestination(e.target.value);
-              setShowDest(true);
-              loadDest(e.target.value);
-            }}
-            onFocus={() => setShowDest(true)}
-            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-          />
-          {showDest && destOptions.length > 0 && (
-            <ul
-              className="absolute bg-white border rounded-md w-full mt-1 shadow max-h-52 overflow-auto z-10"
-              onMouseLeave={() => setShowDest(false)}
-            >
-              {destOptions.map((o) => (
-                <li
-                  key={o.iata}
-                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    setDestination(o.iata);
-                    setShowDest(false);
-                  }}
-                >
-                  {o.label}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-sky-500"
-        />
-
-        <button
-          onClick={handleSearch}
-          disabled={loading}
-          className="bg-sky-600 hover:bg-sky-700 transition text-white font-medium rounded-lg px-6 py-3"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        {/* Header con animación */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8 sm:mb-12"
         >
-          {loading ? "Cargando..." : "Buscar vuelos"}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {!loading && flights.length === 0 && (
-          <p className="text-center text-gray-500 col-span-full">
-            No hay vuelos disponibles.
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <FaPlane className="text-4xl sm:text-5xl text-primary-500" />
+            </motion.div>
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text mb-3">
+            Encuentra tu vuelo perfecto
+          </h1>
+          <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+            Busca y reserva vuelos en tiempo real con las mejores aerolíneas
           </p>
-        )}
-        {flights.map((f) => (
-          <FlightCard
-            key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
-            flight={f}
-          />
-        ))}
+        </motion.div>
+
+        {/* Formulario de búsqueda mejorado */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-effect rounded-2xl shadow-soft p-4 sm:p-8 mb-8 sm:mb-12"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Origen */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FaPlane className="inline mr-2 text-primary-500" />
+                Origen
+              </label>
+              <input
+                type="text"
+                placeholder="Ej: Bogotá o BOG"
+                value={origin}
+                onChange={(e) => {
+                  setOrigin(e.target.value);
+                  setShowOrig(true);
+                  loadOrig(e.target.value);
+                }}
+                onFocus={() => setShowOrig(true)}
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              />
+              {showOrig && origOptions.length > 0 && (
+                <motion.ul
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute bg-white border-2 border-primary-200 rounded-xl w-full mt-2 shadow-lg max-h-52 overflow-auto z-20"
+                  onMouseLeave={() => setShowOrig(false)}
+                >
+                  {origOptions.map((o) => (
+                    <li
+                      key={o.iata}
+                      className="px-4 py-3 text-sm hover:bg-primary-50 cursor-pointer transition-colors border-b last:border-b-0"
+                      onClick={() => {
+                        setOrigin(o.iata);
+                        setShowOrig(false);
+                      }}
+                    >
+                      <span className="font-semibold text-primary-600">{o.iata}</span>
+                      <span className="text-gray-600"> - {o.city}</span>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </div>
+
+            {/* Destino */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FaPlane className="inline mr-2 text-accent-500 rotate-90" />
+                Destino
+              </label>
+              <input
+                type="text"
+                placeholder="Ej: Medellín o MDE"
+                value={destination}
+                onChange={(e) => {
+                  setDestination(e.target.value);
+                  setShowDest(true);
+                  loadDest(e.target.value);
+                }}
+                onFocus={() => setShowDest(true)}
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all"
+              />
+              {showDest && destOptions.length > 0 && (
+                <motion.ul
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute bg-white border-2 border-accent-200 rounded-xl w-full mt-2 shadow-lg max-h-52 overflow-auto z-20"
+                  onMouseLeave={() => setShowDest(false)}
+                >
+                  {destOptions.map((o) => (
+                    <li
+                      key={o.iata}
+                      className="px-4 py-3 text-sm hover:bg-accent-50 cursor-pointer transition-colors border-b last:border-b-0"
+                      onClick={() => {
+                        setDestination(o.iata);
+                        setShowDest(false);
+                      }}
+                    >
+                      <span className="font-semibold text-accent-600">{o.iata}</span>
+                      <span className="text-gray-600"> - {o.city}</span>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </div>
+
+            {/* Fecha */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FaCalendarAlt className="inline mr-2 text-success" />
+                Fecha de viaje
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full border-2 border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-success focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Botón de búsqueda */}
+            <div className="flex items-end">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleSearch}
+                disabled={loading}
+                className="w-full bg-gradient-hero text-white font-semibold rounded-xl px-6 py-3 hover:shadow-glow transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <FaSearch />
+                    </motion.div>
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <FaSearch />
+                    Buscar vuelos
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Resultados */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {!loading && flights.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="col-span-full text-center py-16"
+            >
+              <FaPlane className="text-6xl text-gray-300 mx-auto mb-4" />
+              <p className="text-xl text-gray-500 mb-2">No hay vuelos disponibles</p>
+              <p className="text-gray-400">Intenta con otros criterios de búsqueda</p>
+            </motion.div>
+          )}
+          {flights.map((f, index) => (
+            <motion.div
+              key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <FlightCard flight={f} />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   );
