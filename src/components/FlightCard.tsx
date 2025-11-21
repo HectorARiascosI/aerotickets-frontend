@@ -1,18 +1,19 @@
-// src/components/FlightCard.tsx
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Flight, upsertFlightForReservation } from "@/services/flightService";
 import { createReservation } from "@/services/reservationService";
 import { createCheckoutSession } from "@/services/paymentService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
+import SeatSelector from "@/components/SeatSelector";
 import toast from "react-hot-toast";
+import { FaPlane, FaClock, FaMapMarkerAlt, FaCalendarAlt, FaDoorOpen, FaSuitcase, FaChair } from "react-icons/fa";
 
 type Props = { flight: Flight };
 
 function FlightCard({ flight }: Props) {
   const [open, setOpen] = useState(false);
-  const [seat, setSeat] = useState("");
+  const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   const airline = flight.airline || "Desconocida";
@@ -42,14 +43,9 @@ function FlightCard({ flight }: Props) {
   async function confirmReservation() {
     if (loading) return;
 
-    let seatNum: number | undefined = undefined;
-    if (seat.trim().length > 0) {
-      const parsed = Number(seat.trim());
-      if (!Number.isFinite(parsed) || parsed <= 0) {
-        toast.error("Número de asiento inválido.");
-        return;
-      }
-      seatNum = parsed;
+    if (!selectedSeat) {
+      toast.error("Por favor selecciona un asiento");
+      return;
     }
 
     setLoading(true);
@@ -61,18 +57,18 @@ function FlightCard({ flight }: Props) {
 
       const resp = await createReservation({
         flightId,
-        seatNumber: seatNum,
+        seatNumber: selectedSeat,
         seats: 1,
       });
 
-      const seatShown = resp?.seatNumber ?? seatNum ?? "automático";
+      const seatShown = resp?.seatNumber ?? selectedSeat;
 
       toast.success(
         `Reserva creada: ${airline} ${flightNumber} – Asiento ${seatShown}`
       );
 
       setOpen(false);
-      setSeat("");
+      setSelectedSeat(null);
 
       const session = await createCheckoutSession(flightId);
       if (session.url) {
@@ -168,45 +164,97 @@ function FlightCard({ flight }: Props) {
 
       <Modal
         open={open}
-        onClose={() => setOpen(false)}
-        title={`Reserva en ${airline} ${flightNumber}`}
+        onClose={() => {
+          setOpen(false);
+          setSelectedSeat(null);
+        }}
+        title={`Reserva tu vuelo ${airline} ${flightNumber}`}
       >
-        <div className="space-y-4">
-          <div className="bg-gray-50 rounded-md p-3 text-sm text-gray-700">
-            Ruta: {origin} → {destination}
-            <br />
-            Horario: {depTime} - {arrTime}
-            <br />
-            Modelo: {aircraftType}
+        <div className="space-y-6">
+          {/* Info del vuelo */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-primary-50 to-accent-50 rounded-xl p-4 border-2 border-primary-200"
+          >
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <FaMapMarkerAlt className="text-primary-500" />
+                <div>
+                  <p className="text-xs text-gray-600">Ruta</p>
+                  <p className="font-semibold text-gray-800">{origin} → {destination}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaClock className="text-accent-500" />
+                <div>
+                  <p className="text-xs text-gray-600">Horario</p>
+                  <p className="font-semibold text-gray-800">{depTime} - {arrTime}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaPlane className="text-success" />
+                <div>
+                  <p className="text-xs text-gray-600">Aeronave</p>
+                  <p className="font-semibold text-gray-800">{aircraftType}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaDoorOpen className="text-warning" />
+                <div>
+                  <p className="text-xs text-gray-600">Puerta</p>
+                  <p className="font-semibold text-gray-800">{gate}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Selector de asientos */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+              <FaChair className="text-primary-500" />
+              Selecciona tu asiento
+            </h3>
+            <SeatSelector
+              selectedSeat={selectedSeat}
+              onSelectSeat={setSelectedSeat}
+            />
           </div>
 
-          <label className="block text-sm text-gray-700">
-            Número de asiento (opcional):
-            <input
-              type="number"
-              value={seat}
-              onChange={(e) => setSeat(e.target.value)}
-              placeholder="Ej: 14"
-              min={1}
-              className="mt-1 border rounded-md p-2 w-full focus:ring-2 focus:ring-emerald-500"
-            />
-          </label>
+          {/* Precio y botones */}
+          <div className="border-t pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-600">Total a pagar:</span>
+              <span className="text-2xl font-bold gradient-text">
+                {typeof flight.price === "number"
+                  ? `$${flight.price.toLocaleString("es-CO")}`
+                  : "Sin precio"}
+              </span>
+            </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t">
-            <button
-              onClick={() => setOpen(false)}
-              className="px-4 py-2 rounded-md border text-sm hover:bg-gray-50 transition"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={confirmReservation}
-              disabled={loading}
-              className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-60 transition"
-            >
-              {loading ? "Procesando..." : "Confirmar y pagar"}
-            </button>
+            <div className="flex gap-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setOpen(false);
+                  setSelectedSeat(null);
+                }}
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-all"
+                disabled={loading}
+              >
+                Cancelar
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={confirmReservation}
+                disabled={loading || !selectedSeat}
+                className="flex-1 px-4 py-3 rounded-xl bg-gradient-hero text-white font-semibold hover:shadow-glow disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? "Procesando..." : "Confirmar y pagar"}
+              </motion.button>
+            </div>
           </div>
         </div>
       </Modal>

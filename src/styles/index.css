@@ -62,3 +62,22 @@ html, body, #root {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Scrollbar personalizado para selector de asientos */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0ea5e9 0%, #7c3aed 100%);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0284c7 0%, #6b21a8 100%);
+}

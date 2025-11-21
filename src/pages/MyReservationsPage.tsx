@@ -1,4 +1,3 @@
-// src/pages/MyReservationsPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
   listMyReservations,
@@ -13,7 +12,8 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import toast from "react-hot-toast";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { FaCheckCircle, FaTimesCircle, FaTicketAlt, FaPlane } from "react-icons/fa";
 
 type Row = Reservation;
 
@@ -98,17 +98,56 @@ export default function MyReservationsPage() {
   };
 
   if (loading) return <Loader label="Cargando tus reservas..." />;
-  if (ordered.length === 0) return <EmptyState title="Aún no tienes reservas" />;
-
+  
   const getArrival = (r: Row) => r.arrivalAt || r.arriveAt || "";
 
-  return (
-    <div className="max-w-6xl mx-auto py-6 px-4">
-      <div className="mb-6 text-2xl font-semibold text-gray-800 flex items-center gap-2">
-        Mis reservas
+  if (ordered.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <FaTicketAlt className="text-8xl text-gray-300 mx-auto mb-6" />
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">No tienes reservas aún</h2>
+          <p className="text-gray-600 mb-8">¡Comienza a explorar vuelos y reserva tu próxima aventura!</p>
+          <motion.a
+            href="/flights"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-hero text-white rounded-xl font-semibold hover:shadow-glow transition-all"
+          >
+            <FaPlane />
+            Buscar vuelos
+          </motion.a>
+        </motion.div>
       </div>
+    );
+  }
 
-      <Table>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl sm:text-4xl font-bold gradient-text mb-2 flex items-center gap-3">
+            <FaTicketAlt />
+            Mis reservas
+          </h1>
+          <p className="text-gray-600">Gestiona tus vuelos reservados</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-effect rounded-2xl shadow-soft overflow-hidden"
+        >
+          <Table>
         <THead>
           <TR>
             <TH className="text-left">Vuelo</TH>
@@ -192,6 +231,8 @@ export default function MyReservationsPage() {
           ))}
         </TBody>
       </Table>
+        </motion.div>
+      </div>
     </div>
   );
 }
