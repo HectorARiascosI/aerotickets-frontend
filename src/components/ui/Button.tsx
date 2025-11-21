@@ -6,7 +6,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean
 }
 
-export default function Button({ className, variant = 'primary', loading, children, ...rest }: Props) {
+export default function Button({ className, variant = 'primary', loading, children, disabled, ...rest }: Props) {
   return (
     <button
       className={clsx(
@@ -17,6 +17,7 @@ export default function Button({ className, variant = 'primary', loading, childr
         variant === 'ghost' && 'bg-transparent hover:bg-gray-100',
         className
       )}
+      disabled={disabled || loading}
       {...rest}
     >
       {loading ? 'Procesando...' : children}

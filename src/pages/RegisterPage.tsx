@@ -42,7 +42,7 @@ export default function RegisterPage() {
     } catch (e: any) {
       const errorMessage = e?.response?.data?.message ?? MESSAGES.AUTH.REGISTER_ERROR
       toast.error(errorMessage)
-      throw e // Re-throw para que react-hook-form maneje el estado isSubmitting correctamente
+      // No re-throw - dejar que react-hook-form maneje el estado
     }
   }
 

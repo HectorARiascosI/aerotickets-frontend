@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
     } catch (e: any) {
       const errorMessage = e?.response?.data?.message ?? MESSAGES.AUTH.PASSWORD_RESET_ERROR
       toast.error(errorMessage)
-      throw e // Re-throw para que react-hook-form maneje el estado isSubmitting correctamente
+      // No re-throw - dejar que react-hook-form maneje el estado
     }
   }
 

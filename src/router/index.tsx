@@ -1,8 +1,9 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import AIChatBot from "@/components/AIChatBot";
 import ProtectedRoute from "@/auth/ProtectedRoute";
 import { Suspense, lazy } from "react";
+import { useAuth } from "@/auth/useAuth";
 
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -15,6 +16,8 @@ const PaymentSuccessPage = lazy(() => import("@/pages/PaymentSuccessPage"));
 const PaymentCancelPage = lazy(() => import("@/pages/PaymentCancelPage"));
 
 export default function AppRoutes() {
+  const { user } = useAuth();
+  
   return (
     <>
       <Navbar />
@@ -46,7 +49,8 @@ export default function AppRoutes() {
           <Route path="*" element={<div className="p-6">404 — Página no encontrada</div>} />
         </Routes>
       </Suspense>
-      <AIChatBot />
+      {/* Solo mostrar chatbot si el usuario está autenticado */}
+      {user && <AIChatBot />}
     </>
   );
 }
