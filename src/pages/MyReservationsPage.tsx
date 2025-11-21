@@ -153,7 +153,7 @@ export default function MyReservationsPage() {
             <TH className="text-left">Fechas</TH>
             <TH className="text-right">Precio</TH>
             <TH className="text-center">Estado</TH>
-            <TH className="text-right"></TH>
+            <TH className="text-right">Acciones</TH>
           </TR>
         </THead>
         <TBody>
