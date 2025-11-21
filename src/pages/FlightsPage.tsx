@@ -240,8 +240,49 @@ export default function FlightsPage() {
           </div>
         </motion.div>
 
-        {/* Mapa de ruta */}
-        {origin && destination && (
+        {/* Contenedor principal con mapa y resultados */}
+        {origin && destination && flights.length > 0 ? (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Columna de resultados (2/3 del espacio) */}
+            <div className="xl:col-span-2 space-y-6">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <FaPlane className="text-primary-500" />
+                Vuelos disponibles ({flights.length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {flights.map((f, index) => (
+                  <motion.div
+                    key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <FlightCard flight={f} />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Columna del mapa (1/3 del espacio, sticky) */}
+            <div className="xl:col-span-1">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="sticky top-24"
+              >
+                <div className="glass-effect rounded-2xl shadow-soft p-4">
+                  <h2 className="text-lg font-bold gradient-text mb-3 flex items-center gap-2">
+                    <FaMap />
+                    Ruta: {origin} → {destination}
+                  </h2>
+                  <FlightRouteMap origin={origin} destination={destination} className="h-[600px]" />
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        ) : origin && destination && !loading ? (
+          /* Mapa a pantalla completa cuando no hay resultados */
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -253,35 +294,36 @@ export default function FlightsPage() {
                 <FaMap />
                 Ruta de vuelo: {origin} → {destination}
               </h2>
-              <FlightRouteMap origin={origin} destination={destination} className="h-96" />
+              <FlightRouteMap origin={origin} destination={destination} className="h-[500px]" />
             </div>
+          </motion.div>
+        ) : null}
+
+        {/* Estado vacío cuando no hay búsqueda */}
+        {!loading && flights.length === 0 && !origin && !destination && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
+            <FaPlane className="text-6xl text-gray-300 mx-auto mb-4" />
+            <p className="text-xl text-gray-500 mb-2">Busca vuelos para comenzar</p>
+            <p className="text-gray-400">Selecciona origen, destino y fecha</p>
           </motion.div>
         )}
 
-        {/* Resultados */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {!loading && flights.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="col-span-full text-center py-16"
-            >
-              <FaPlane className="text-6xl text-gray-300 mx-auto mb-4" />
-              <p className="text-xl text-gray-500 mb-2">No hay vuelos disponibles</p>
-              <p className="text-gray-400">Intenta con otros criterios de búsqueda</p>
-            </motion.div>
-          )}
-          {flights.map((f, index) => (
-            <motion.div
-              key={`${f.flightNumber}-${f.origin}-${f.departureAt}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <FlightCard flight={f} />
-            </motion.div>
-          ))}
-        </div>
+        {/* Estado vacío cuando hay búsqueda pero sin resultados */}
+        {!loading && flights.length === 0 && origin && destination && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
+            <FaPlane className="text-6xl text-gray-300 mx-auto mb-4" />
+            <p className="text-xl text-gray-500 mb-2">No hay vuelos disponibles</p>
+            <p className="text-gray-400">Intenta con otros criterios de búsqueda</p>
+          </motion.div>
+        )}
       </div>
     </div>
   );
