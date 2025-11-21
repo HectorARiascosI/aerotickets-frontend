@@ -103,7 +103,7 @@ export default function SeatSelector({ onSelectSeat, selectedSeat }: SeatSelecto
         </div>
 
         {/* Asientos */}
-        <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
           {Array.from({ length: rows }, (_, rowIndex) => {
             const rowNumber = rowIndex + 1;
             const rowSeats = seats.filter((s) => s.row === rowNumber);
