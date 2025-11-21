@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flight, upsertFlightForReservation } from "@/services/flightService";
-import { createReservation, getOccupiedSeats } from "@/services/reservationService";
+import { createReservation, getOccupiedSeats, hasUserReservedFlight } from "@/services/reservationService";
 import { createCheckoutSession } from "@/services/paymentService";
 import { statusColors, statusLabel } from "@/utils/flightColors";
 import Modal from "@/components/ui/Modal";
@@ -170,7 +170,17 @@ function FlightCard({ flight }: Props) {
           )}
 
           <button
-            onClick={() => setOpen(true)}
+            onClick={async () => {
+              // Verificar si el usuario ya tiene este vuelo reservado
+              if ((flight as any).id) {
+                const alreadyReserved = await hasUserReservedFlight((flight as any).id);
+                if (alreadyReserved) {
+                  toast.error("Ya has reservado este vuelo anteriormente. No puedes volver a comprarlo.");
+                  return;
+                }
+              }
+              setOpen(true);
+            }}
             className="px-5 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700 transition"
           >
             Reservar

@@ -66,3 +66,13 @@ export async function getOccupiedSeats(flightId: number): Promise<string[]> {
   );
   return Array.isArray(data) ? data : [];
 }
+
+export async function hasUserReservedFlight(flightId: number): Promise<boolean> {
+  try {
+    const reservations = await listMyReservations();
+    return reservations.some(r => r.flightId === flightId);
+  } catch (e) {
+    console.error("Error checking if user has reserved flight:", e);
+    return false;
+  }
+}
