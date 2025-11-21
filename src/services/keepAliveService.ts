@@ -6,7 +6,7 @@ const HEALTH_ENDPOINT = `${BACKEND_URL}/api/health`
 const MIN_INTERVAL = 50 * 1000  // 50 segundos
 const MAX_INTERVAL = 4 * 60 * 1000  // 4 minutos
 
-let keepAliveInterval: NodeJS.Timeout | null = null
+let keepAliveInterval: ReturnType<typeof setTimeout> | null = null
 
 function getRandomInterval(): number {
   return Math.floor(Math.random() * (MAX_INTERVAL - MIN_INTERVAL + 1)) + MIN_INTERVAL
