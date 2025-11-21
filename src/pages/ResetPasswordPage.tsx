@@ -11,7 +11,14 @@ import { resetPassword } from '@/services/authService'
 import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
-const schema = z.object({ password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH) })
+const schema = z.object({ 
+  password: z.preprocess(
+    (val) => typeof val === 'string' ? val.trim() : val,
+    z.string()
+      .min(1, 'La contraseña es requerida')
+      .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  )
+})
 type FormData = z.infer<typeof schema>
 
 export default function ResetPasswordPage() {

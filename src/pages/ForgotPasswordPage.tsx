@@ -11,7 +11,14 @@ import { requestReset } from '@/services/authService'
 import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
-const schema = z.object({ email: z.string().email(MESSAGES.AUTH.INVALID_EMAIL) })
+const schema = z.object({ 
+  email: z.preprocess(
+    (val) => typeof val === 'string' ? val.trim() : val,
+    z.string()
+      .min(1, 'El email es requerido')
+      .email(MESSAGES.AUTH.INVALID_EMAIL)
+  )
+})
 type FormData = z.infer<typeof schema>
 
 export default function ForgotPasswordPage() {

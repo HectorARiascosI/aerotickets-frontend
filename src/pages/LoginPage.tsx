@@ -13,8 +13,18 @@ import { FaPlane, FaEnvelope, FaLock } from 'react-icons/fa'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  email: z.string().email(MESSAGES.AUTH.INVALID_EMAIL),
-  password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  email: z.preprocess(
+    (val) => typeof val === 'string' ? val.trim() : val,
+    z.string()
+      .min(1, 'El email es requerido')
+      .email(MESSAGES.AUTH.INVALID_EMAIL)
+  ),
+  password: z.preprocess(
+    (val) => typeof val === 'string' ? val.trim() : val,
+    z.string()
+      .min(1, 'La contraseña es requerida')
+      .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  )
 })
 type FormData = z.infer<typeof schema>
 

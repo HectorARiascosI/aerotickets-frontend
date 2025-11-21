@@ -11,9 +11,24 @@ import toast from 'react-hot-toast'
 import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  username: z.string().min(2, MESSAGES.AUTH.MIN_USERNAME_LENGTH),
-  email: z.string().email(MESSAGES.AUTH.INVALID_EMAIL),
-  password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  username: z.preprocess(
+    (val) => typeof val === 'string' ? val.trim() : val,
+    z.string()
+      .min(1, 'El nombre es requerido')
+      .min(2, MESSAGES.AUTH.MIN_USERNAME_LENGTH)
+  ),
+  email: z.preprocess(
+    (val) => typeof val === 'string' ? val.trim() : val,
+    z.string()
+      .min(1, 'El email es requerido')
+      .email(MESSAGES.AUTH.INVALID_EMAIL)
+  ),
+  password: z.preprocess(
+    (val) => typeof val === 'string' ? val.trim() : val,
+    z.string()
+      .min(1, 'La contraseña es requerida')
+      .min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
+  )
 })
 type FormData = z.infer<typeof schema>
 
