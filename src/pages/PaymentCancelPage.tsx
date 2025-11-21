@@ -2,23 +2,23 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaTimesCircle, FaArrowLeft } from "react-icons/fa";
+import { MESSAGES, ROUTES } from "@/constants";
 
 export default function PaymentCancelPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Prevenir navegación hacia atrás
     window.history.pushState(null, "", window.location.href);
     
     const handlePopState = () => {
       window.history.pushState(null, "", window.location.href);
-      navigate("/reservations", { replace: true });
+      navigate(ROUTES.RESERVATIONS, { replace: true });
     };
 
     window.addEventListener("popstate", handlePopState);
 
     const timeout = setTimeout(() => {
-      navigate("/reservations", { replace: true });
+      navigate(ROUTES.RESERVATIONS, { replace: true });
     }, 5000);
 
     return () => {
@@ -28,7 +28,7 @@ export default function PaymentCancelPage() {
   }, [navigate]);
 
   const goNow = () => {
-    navigate("/reservations", { replace: true });
+    navigate(ROUTES.RESERVATIONS, { replace: true });
   };
 
   return (
@@ -52,7 +52,7 @@ export default function PaymentCancelPage() {
           transition={{ delay: 0.4 }}
           className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4"
         >
-          Pago cancelado
+          {MESSAGES.PAYMENT.CANCEL_TITLE}
         </motion.h1>
         
         <motion.p
@@ -61,7 +61,7 @@ export default function PaymentCancelPage() {
           transition={{ delay: 0.6 }}
           className="text-gray-600 mb-8 text-lg max-w-md mx-auto"
         >
-          No se realizó ningún cargo. Puedes intentar nuevamente cuando estés listo.
+          {MESSAGES.PAYMENT.CANCEL_MESSAGE}
         </motion.p>
 
         <motion.div
@@ -77,11 +77,11 @@ export default function PaymentCancelPage() {
             className="inline-flex items-center gap-2 px-8 py-4 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all"
           >
             <FaArrowLeft />
-            Volver a mis reservas
+            {MESSAGES.PAYMENT.TRY_AGAIN}
           </motion.button>
           
           <p className="text-sm text-gray-500">
-            Serás redirigido automáticamente en unos segundos...
+            {MESSAGES.PAYMENT.AUTO_REDIRECT}
           </p>
         </motion.div>
       </motion.div>

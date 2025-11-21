@@ -8,11 +8,12 @@ import Card from '@/components/ui/Card'
 import { useAuth } from '@/auth/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  username: z.string().min(2, 'Mínimo 2 caracteres'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(4, 'Mínimo 4 caracteres')
+  username: z.string().min(2, MESSAGES.AUTH.MIN_USERNAME_LENGTH),
+  email: z.string().email(MESSAGES.AUTH.INVALID_EMAIL),
+  password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -21,25 +22,22 @@ export default function RegisterPage() {
   const { register: registerUser, user } = useAuth()
   const navigate = useNavigate()
 
-  // Si el usuario ya está autenticado, redirigir a flights
   useEffect(() => {
     if (user) {
-      navigate('/flights', { replace: true })
+      navigate(ROUTES.FLIGHTS, { replace: true })
     }
   }, [user, navigate])
 
   const onSubmit = async (data: FormData) => {
     try {
       await registerUser(data)
-      toast.success('Cuenta creada, ahora inicia sesión')
-      // Usar replace para evitar que el usuario vuelva al registro con el botón atrás
-      navigate('/login', { replace: true })
+      toast.success(MESSAGES.AUTH.REGISTER_SUCCESS)
+      navigate(ROUTES.LOGIN, { replace: true })
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'No fue posible crear la cuenta')
+      toast.error(e?.response?.data?.message ?? MESSAGES.AUTH.REGISTER_ERROR)
     }
   }
 
-  // No renderizar el formulario si el usuario ya está autenticado
   if (user) {
     return null
   }
@@ -47,22 +45,22 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen grid place-items-center px-4 py-8 bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Card className="w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4 gradient-text">Crear cuenta</h1>
+        <h1 className="text-2xl font-bold mb-4 gradient-text">{LABELS.AUTH.REGISTER_TITLE}</h1>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input label="Usuario" {...registerField('username')} error={errors.username?.message} />
-          <Input label="Email" type="email" {...registerField('email')} error={errors.email?.message} />
-          <Input label="Contraseña" type="password" {...registerField('password')} error={errors.password?.message} />
+          <Input label={LABELS.AUTH.USERNAME} {...registerField('username')} error={errors.username?.message} />
+          <Input label={LABELS.AUTH.EMAIL} type="email" {...registerField('email')} error={errors.email?.message} />
+          <Input label={LABELS.AUTH.PASSWORD} type="password" {...registerField('password')} error={errors.password?.message} />
           <Button 
             type="submit" 
             loading={isSubmitting} 
             className="w-full !bg-gradient-hero hover:shadow-glow"
           >
-            Registrar
+            {LABELS.AUTH.REGISTER_BUTTON}
           </Button>
         </form>
         <div className="text-sm mt-4 text-center">
-          <Link className="text-primary-600 hover:text-primary-700 font-medium" to="/login">
-            ¿Ya tienes cuenta? Inicia sesión
+          <Link className="text-primary-600 hover:text-primary-700 font-medium" to={ROUTES.LOGIN}>
+            {LABELS.AUTH.HAVE_ACCOUNT}
           </Link>
         </div>
       </Card>

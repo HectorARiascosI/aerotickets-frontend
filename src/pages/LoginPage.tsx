@@ -10,10 +10,11 @@ import { useAuth } from '@/auth/AuthContext'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { FaPlane, FaEnvelope, FaLock } from 'react-icons/fa'
+import { LABELS, MESSAGES, ROUTES } from '@/constants'
 
 const schema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(4, 'Mínimo 4 caracteres')
+  email: z.string().email(MESSAGES.AUTH.INVALID_EMAIL),
+  password: z.string().min(4, MESSAGES.AUTH.MIN_PASSWORD_LENGTH)
 })
 type FormData = z.infer<typeof schema>
 
@@ -22,26 +23,23 @@ export default function LoginPage() {
   const { login, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as any)?.from?.pathname || '/flights'
+  const from = (location.state as any)?.from?.pathname || ROUTES.FLIGHTS
 
-  // Si el usuario ya está autenticado, redirigir a flights
   useEffect(() => {
     if (user) {
-      navigate('/flights', { replace: true })
+      navigate(ROUTES.FLIGHTS, { replace: true })
     }
   }, [user, navigate])
 
   const onSubmit = async (data: FormData) => {
     try {
       await login(data.email, data.password)
-      // Usar replace para evitar que el usuario vuelva al login con el botón atrás
       navigate(from, { replace: true })
     } catch (e: any) {
-      toast.error(e?.response?.data?.message ?? 'No fue posible iniciar sesión')
+      toast.error(e?.response?.data?.message ?? MESSAGES.AUTH.LOGIN_ERROR)
     }
   }
 
-  // No renderizar el formulario si el usuario ya está autenticado
   if (user) {
     return null
   }
@@ -54,7 +52,6 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Logo animado */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -68,8 +65,8 @@ export default function LoginPage() {
           >
             <FaPlane className="text-4xl text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold gradient-text">Bienvenido de vuelta</h1>
-          <p className="text-gray-600 mt-2">Inicia sesión para continuar tu viaje</p>
+          <h1 className="text-3xl font-bold gradient-text">{LABELS.AUTH.LOGIN_TITLE}</h1>
+          <p className="text-gray-600 mt-2">{LABELS.AUTH.LOGIN_SUBTITLE}</p>
         </motion.div>
 
         <Card className="shadow-xl">
@@ -77,7 +74,7 @@ export default function LoginPage() {
             <div className="relative">
               <FaEnvelope className="absolute left-3 top-10 text-gray-400" />
               <Input 
-                label="Email" 
+                label={LABELS.AUTH.EMAIL}
                 type="email" 
                 {...register('email')} 
                 error={errors.email?.message}
@@ -88,7 +85,7 @@ export default function LoginPage() {
             <div className="relative">
               <FaLock className="absolute left-3 top-10 text-gray-400" />
               <Input 
-                label="Contraseña" 
+                label={LABELS.AUTH.PASSWORD}
                 type="password" 
                 {...register('password')} 
                 error={errors.password?.message}
@@ -101,31 +98,30 @@ export default function LoginPage() {
               loading={isSubmitting} 
               className="w-full !bg-gradient-hero hover:shadow-glow !py-3 !text-base"
             >
-              Iniciar sesión
+              {LABELS.AUTH.LOGIN_BUTTON}
             </Button>
           </form>
           
           <div className="text-sm mt-6 space-y-3">
             <div className="flex justify-between items-center">
-              <Link className="text-primary-600 hover:text-primary-700 font-medium" to="/register">
-                Crear cuenta nueva
+              <Link className="text-primary-600 hover:text-primary-700 font-medium" to={ROUTES.REGISTER}>
+                {LABELS.AUTH.CREATE_ACCOUNT}
               </Link>
-              <Link className="text-gray-600 hover:text-gray-700" to="/forgot-password">
-                ¿Olvidaste tu contraseña?
+              <Link className="text-gray-600 hover:text-gray-700" to={ROUTES.FORGOT_PASSWORD}>
+                {LABELS.AUTH.FORGOT_PASSWORD}
               </Link>
             </div>
           </div>
         </Card>
 
-        {/* Link a landing */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
           className="text-center mt-6"
         >
-          <Link to="/" className="text-gray-600 hover:text-primary-600 transition-colors">
-            ← Volver al inicio
+          <Link to={ROUTES.HOME} className="text-gray-600 hover:text-primary-600 transition-colors">
+            ← {LABELS.AUTH.BACK_TO_HOME}
           </Link>
         </motion.div>
       </motion.div>

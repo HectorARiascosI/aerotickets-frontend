@@ -8,49 +8,41 @@ import DateSelector from "../components/DateSelector";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { FaPlane, FaSearch, FaMap } from "react-icons/fa";
+import { STORAGE_KEYS, LABELS, MESSAGES } from "@/constants";
 
-// Claves para localStorage
-const STORAGE_KEYS = {
-  ORIGIN: 'flights_search_origin',
-  DESTINATION: 'flights_search_destination',
-  DATE: 'flights_search_date',
-  FLIGHTS: 'flights_search_results',
-};
+
 
 export default function FlightsPage() {
-  // Recuperar estado del localStorage
-  const [origin, setOrigin] = useState(() => localStorage.getItem(STORAGE_KEYS.ORIGIN) || "");
-  const [destination, setDestination] = useState(() => localStorage.getItem(STORAGE_KEYS.DESTINATION) || "");
+  const [origin, setOrigin] = useState(() => localStorage.getItem(STORAGE_KEYS.FLIGHTS_SEARCH_ORIGIN) || "");
+  const [destination, setDestination] = useState(() => localStorage.getItem(STORAGE_KEYS.FLIGHTS_SEARCH_DESTINATION) || "");
   const [date, setDate] = useState(() => {
-    const savedDate = localStorage.getItem(STORAGE_KEYS.DATE);
+    const savedDate = localStorage.getItem(STORAGE_KEYS.FLIGHTS_SEARCH_DATE);
     const today = new Date().toISOString().split("T")[0];
-    // Si la fecha guardada es anterior a hoy, usar hoy
     if (savedDate && savedDate >= today) {
       return savedDate;
     }
     return today;
   });
   const [flights, setFlights] = useState<Flight[]>(() => {
-    const savedFlights = localStorage.getItem(STORAGE_KEYS.FLIGHTS);
+    const savedFlights = localStorage.getItem(STORAGE_KEYS.FLIGHTS_SEARCH_RESULTS);
     return savedFlights ? JSON.parse(savedFlights) : [];
   });
   const [loading, setLoading] = useState(false);
 
-  // Guardar en localStorage cuando cambien los valores
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ORIGIN, origin);
+    localStorage.setItem(STORAGE_KEYS.FLIGHTS_SEARCH_ORIGIN, origin);
   }, [origin]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DESTINATION, destination);
+    localStorage.setItem(STORAGE_KEYS.FLIGHTS_SEARCH_DESTINATION, destination);
   }, [destination]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DATE, date);
+    localStorage.setItem(STORAGE_KEYS.FLIGHTS_SEARCH_DATE, date);
   }, [date]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.FLIGHTS, JSON.stringify(flights));
+    localStorage.setItem(STORAGE_KEYS.FLIGHTS_SEARCH_RESULTS, JSON.stringify(flights));
   }, [flights]);
 
   useEffect(() => {
@@ -76,7 +68,7 @@ export default function FlightsPage() {
 
   async function handleSearch() {
     if (!origin || !destination) {
-      toast.error("Selecciona un origen y un destino válidos.");
+      toast.error(MESSAGES.FLIGHTS.SELECT_ORIGIN_DESTINATION);
       return;
     }
 
@@ -85,10 +77,10 @@ export default function FlightsPage() {
       const list = await searchFlights(origin, destination, date);
       setFlights(list);
       if (list.length === 0) {
-        toast("No se encontraron vuelos para esos datos.");
+        toast(MESSAGES.FLIGHTS.NO_RESULTS);
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "No fue posible buscar los vuelos");
+      toast.error(e?.message ?? MESSAGES.FLIGHTS.SEARCH_ERROR);
     } finally {
       setLoading(false);
     }
